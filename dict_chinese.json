@@ -1,0 +1,1191 @@
+
+[
+        {
+            "trad"      : "一",
+            "simp"      : "一",
+            "pinyin"    : "yī",
+            "meaning"   : "one (det.)"
+        },
+        {
+            "trad"      : "在",
+            "simp"      : "在",
+            "pinyin"    : "zài",
+            "meaning"   : "in, at, on"
+        },
+        {
+            "trad"      : "有",
+            "simp"      : "有",
+            "pinyin"    : "yǒu",
+            "meaning"   : "have, possess"
+        },
+        {
+            "trad"      : "個",
+            "simp"      : "个",
+            "pinyin"    : "ge",
+            "meaning"   : "piece, item, object"
+        },
+        {
+            "trad"      : "我",
+            "simp"      : "我",
+            "pinyin"    : "wǒ",
+            "meaning"   : "I, me, ego, self"
+        },
+        {
+            "trad"      : "不",
+            "simp"      : "不",
+            "pinyin"    : "bù",
+            "meaning"   : "non, do not, no, nowise, not, nope, nae, no more, nix"
+        },
+        {
+            "trad"      : "這",
+            "simp"      : "这",
+            "pinyin"    : "zhè",
+            "meaning"   : "now, this, det.: this, it"
+        },
+        {
+            "trad"      : "了",
+            "simp"      : "了",
+            "pinyin"    : "le",
+            "meaning"   : "entirely::::, particle: indicating new situation; indicating completed action"
+        },
+        {
+            "trad"      : "他",
+            "simp"      : "他",
+            "pinyin"    : "tā",
+            "meaning"   : "he, she, it, they (referring to inanimate things in object position)"
+        },
+        {
+            "trad"      : "也",
+            "simp"      : "也",
+            "pinyin"    : "yě",
+            "meaning"   : "also, too, as well, either, even"
+        },
+        {
+            "trad"      : "就",
+            "simp"      : "就",
+            "pinyin"    : "jiù",
+            "meaning"   : "then, at once, right away, an indicator strengthening speaker's evaluation"
+        },
+        {
+            "trad"      : "人",
+            "simp"      : "人",
+            "pinyin"    : "rén",
+            "meaning"   : "person, people"
+        },
+        {
+            "trad"      : "都",
+            "simp"      : "都",
+            "pinyin"    : "dōu",
+            "meaning"   : "all, even, already"
+        },
+        {
+            "trad"      : "說",
+            "simp"      : "说",
+            "pinyin"    : "shuō",
+            "meaning"   : "speak, talk, explain, scold"
+        },
+        {
+            "trad"      : "而",
+            "simp"      : "而",
+            "pinyin"    : "ér",
+            "meaning"   : "conj.: and yet"
+        },
+        {
+            "trad"      : "我們",
+            "simp"      : "我们",
+            "pinyin"    : "wǒmen",
+            "meaning"   : "we"
+        },
+        {
+            "trad"      : "你",
+            "simp"      : "你",
+            "pinyin"    : "nǐ",
+            "meaning"   : "you"
+        },
+        {
+            "trad"      : "要",
+            "simp"      : "要",
+            "pinyin"    : "yào",
+            "meaning"   : "want, need, must, should"
+        },
+        {
+            "trad"      : "會",
+            "simp"      : "会",
+            "pinyin"    : "huì",
+            "meaning"   : "to be able, can, will, to meet"
+        },
+        {
+            "trad"      : "對",
+            "simp"      : "对",
+            "pinyin"    : "duì",
+            "meaning"   : "correct, true, toward"
+        },
+        {
+            "trad"      : "及",
+            "simp"      : "及",
+            "pinyin"    : "jí",
+            "meaning"   : "to reach, to catch up, and"
+        },
+        {
+            "trad"      : "和",
+            "simp"      : "和",
+            "pinyin"    : "hé",
+            "meaning"   : "and, with, gentle, peaceful"
+        },
+        {
+            "trad"      : "與",
+            "simp"      : "与",
+            "pinyin"    : "yǔ",
+            "meaning"   : "and, together with, to give"
+        },
+        {
+            "trad"      : "以",
+            "simp"      : "以",
+            "pinyin"    : "yǐ",
+            "meaning"   : "using, taking, from a point on, because of"
+        },
+        {
+            "trad"      : "很",
+            "simp"      : "很",
+            "pinyin"    : "hěn",
+            "meaning"   : "pretty, thrice, monstrously, gey, quite, mighty, stinking, sopping, some, assai, full, most, clinking, much, thumping, awfully, fiendishly, thundering, very, real, really, bally, proper, grossly, powerful, so, rattling, well, considerably, greatly, terribly"
+        },
+        {
+            "trad"      : "種",
+            "simp"      : "种",
+            "pinyin"    : "zhǒng",
+            "meaning"   : "m.[kind, species]"
+        },
+        {
+            "trad"      : "的",
+            "simp"      : "的",
+            "pinyin"    : "de",
+            "meaning"   : "particle: emphasizing an action/situation"
+        },
+        {
+            "trad"      : "大",
+            "simp"      : "大",
+            "pinyin"    : "dà",
+            "meaning"   : "great, macro, old, very, vast, tall, big, high, much"
+        },
+        {
+            "trad"      : "能",
+            "simp"      : "能",
+            "pinyin"    : "néng",
+            "meaning"   : "can or to be capable of"
+        },
+        {
+            "trad"      : "著",
+            "simp"      : "着",
+            "pinyin"    : "zhe",
+            "meaning"   : "[aspect]"
+        },
+        {
+            "trad"      : "她",
+            "simp"      : "她",
+            "pinyin"    : "tā",
+            "meaning"   : "she, her, she (neologism for {1ta1}[2]), )"
+        },
+        {
+            "trad"      : "那",
+            "simp"      : "那",
+            "pinyin"    : "nà",
+            "meaning"   : "det.: that"
+        },
+        {
+            "trad"      : "上",
+            "simp"      : "上",
+            "pinyin"    : "shàng",
+            "meaning"   : "on, above"
+        },
+        {
+            "trad"      : "但",
+            "simp"      : "但",
+            "pinyin"    : "dàn",
+            "meaning"   : "conj.: but, yet, still, nevertheless, only, merely"
+        },
+        {
+            "trad"      : "年",
+            "simp"      : "年",
+            "pinyin"    : "nián",
+            "meaning"   : "year"
+        },
+        {
+            "trad"      : "還",
+            "simp"      : "还",
+            "pinyin"    : "hái",
+            "meaning"   : "still, yet, also, too, as well, besides"
+        },
+        {
+            "trad"      : "可以",
+            "simp"      : "可以",
+            "pinyin"    : "kěyǐ",
+            "meaning"   : "can, may"
+        },
+        {
+            "trad"      : "最",
+            "simp"      : "最",
+            "pinyin"    : "zuì",
+            "meaning"   : "most, to the highest degree, much, superlatively"
+        },
+        {
+            "trad"      : "自己",
+            "simp"      : "自己",
+            "pinyin"    : "zìjǐ",
+            "meaning"   : "lonesome, number_one, own, ego, self, oneself, name"
+        },
+        {
+            "trad"      : "為",
+            "simp"      : "为",
+            "pinyin"    : "wéi",
+            "meaning"   : "by"
+        },
+        {
+            "trad"      : "來",
+            "simp"      : "来",
+            "pinyin"    : "lái",
+            "meaning"   : "to"
+        },
+        {
+            "trad"      : "所",
+            "simp"      : "所",
+            "pinyin"    : "suǒ",
+            "meaning"   : "that which"
+        },
+        {
+            "trad"      : "他們",
+            "simp"      : "他们",
+            "pinyin"    : "tāmen",
+            "meaning"   : "they"
+        },
+        {
+            "trad"      : "兩",
+            "simp"      : "两",
+            "pinyin"    : "liǎng",
+            "meaning"   : "det.: two, both (sides), either (side), a few, some"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "各",
+            "pinyin"    : "gè",
+            "meaning"   : "det.: each, every"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "可",
+            "pinyin"    : "kě",
+            "meaning"   : "can, may"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "为",
+            "pinyin"    : "wéi",
+            "meaning"   : "be, become"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "或",
+            "pinyin"    : "huò",
+            "meaning"   : "conj.: or, either or"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "好",
+            "pinyin"    : "hǎo",
+            "meaning"   : "good"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "等",
+            "pinyin"    : "děng",
+            "meaning"   : "conj.: and so on, etc"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "又",
+            "pinyin"    : "yòu",
+            "meaning"   : "again, moreover"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "将",
+            "pinyin"    : "jiāng",
+            "meaning"   : "be about to"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "因为",
+            "pinyin"    : "yīnwèi",
+            "meaning"   : "conj.: because, for, on account of"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "于",
+            "pinyin"    : "yū",
+            "meaning"   : "in, at, to, from, out of, by"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "由",
+            "pinyin"    : "yóu",
+            "meaning"   : "from, via, by, through, owing/due to"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "从",
+            "pinyin"    : "cóng",
+            "meaning"   : "from, since, through"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "更",
+            "pinyin"    : "gèng",
+            "meaning"   : "more, still/even more, further, furthermore"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "被",
+            "pinyin"    : "bèi",
+            "meaning"   : "by"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "才",
+            "pinyin"    : "cái",
+            "meaning"   : "then and only then, just now, only (before a number)"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "已",
+            "pinyin"    : "yǐ",
+            "meaning"   : "already"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "者",
+            "pinyin"    : "zhě",
+            "meaning"   : "nominal suffix, one who, -er"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "每",
+            "pinyin"    : "měi",
+            "meaning"   : "det.: every"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "次",
+            "pinyin"    : "cì",
+            "meaning"   : "order, sequence, next"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "把",
+            "pinyin"    : "bǎ",
+            "meaning"   : "indicating pre-verbal object as thing dealt with by the action"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "三",
+            "pinyin"    : "sān",
+            "meaning"   : "det.: three"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "什么",
+            "pinyin"    : "shéme",
+            "meaning"   : "anything, what"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "问题",
+            "pinyin"    : "wèntí",
+            "meaning"   : "problem, mishap, query, job, interface, question, inquiry, matter, enquiry, trouble, issue, worry, subject, topic, hang-up, business, quaere"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "其",
+            "pinyin"    : "qí",
+            "meaning"   : "det.: its, his, her, their, it, this, that"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "让",
+            "pinyin"    : "ràng",
+            "meaning"   : "allow, induce sb. to do sth."
+        },
+        {
+            "trad"      : "",
+            "simp"      : "此",
+            "pinyin"    : "cǐ",
+            "meaning"   : "this, det.: this, here"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "做",
+            "pinyin"    : "zuò",
+            "meaning"   : "make, do"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "再",
+            "pinyin"    : "zài",
+            "meaning"   : "again, once more, further(more), in a higher degree, and then, not (do sth.) before"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "所以",
+            "pinyin"    : "suǒyǐ",
+            "meaning"   : "conj.: so, therefore, as a result"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "只",
+            "pinyin"    : "zhǐ",
+            "meaning"   : "only, merely"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "与",
+            "pinyin"    : "yǔ",
+            "meaning"   : "with, to"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "则",
+            "pinyin"    : "zé",
+            "meaning"   : "then, in that case"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "台湾",
+            "pinyin"    : "táiwān",
+            "meaning"   : "Taiwan"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "却",
+            "pinyin"    : "què",
+            "meaning"   : "however, but, yet, indeed"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "并",
+            "pinyin"    : "bìng",
+            "meaning"   : "to be side by side, simultaneously, and"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "位",
+            "pinyin"    : "wèi",
+            "meaning"   : "location, digit, m.[general], , status, figure, throne, position, place, condition"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "想",
+            "pinyin"    : "xiǎng",
+            "meaning"   : "think, suppose, reckon, consider, want to, would like to, feel like (doing sth.)"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "去",
+            "pinyin"    : "qù",
+            "meaning"   : "to go, to leave, in order to"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "呢",
+            "pinyin"    : "ne",
+            "meaning"   : "particle: marking quesitons about subject already mentioned; indicating strong affirmation"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "学生",
+            "pinyin"    : "xuéshēng",
+            "meaning"   : "academic, pupil, pup, tutee, follower, scholar, schoolchild, schoolboy, alumnus, disciple, learner, scholastic, student"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "表示",
+            "pinyin"    : "biǎoshì",
+            "meaning"   : "demonstrate, exhibit, prove, show, extend, manifest, express, stamp, signify, mark, witness, look, give, denote, evince, expression, bespeak, say, profess, mean, offer, utter, infer, indicate, represent, read, speak, refer, give tongue to, intend, be, shew, pay, stand_for, establish, stand for, present, render, betoken"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "到",
+            "pinyin"    : "dào",
+            "meaning"   : "up until"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "公司",
+            "pinyin"    : "gōngsī",
+            "meaning"   : "place of business, business organization, incorporation, establishment, business concern, office, concern, business establishment, business, enterprise, company, corporation"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "将",
+            "pinyin"    : "jiāng",
+            "meaning"   : "introducing object of main verb"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "如果",
+            "pinyin"    : "rúguǒ",
+            "meaning"   : "conj.: if"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "社会",
+            "pinyin"    : "shèhuì",
+            "meaning"   : "community, society, monde, social, public"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "看",
+            "pinyin"    : "kàn",
+            "meaning"   : "see, look at, watch, read, look upon, regard, look after, call on, visit"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "小",
+            "pinyin"    : "xiǎo",
+            "meaning"   : "small, little, petty, minor;young"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "天",
+            "pinyin"    : "tiān",
+            "meaning"   : "m.[standard], day, sky, heavens"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "因此",
+            "pinyin"    : "yīncǐ",
+            "meaning"   : "conj.: therefore, consequently"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "新",
+            "pinyin"    : "xīn",
+            "meaning"   : "new, fresh, up-to-date"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "但是",
+            "pinyin"    : "dànshì",
+            "meaning"   : "conj.: but, however, yet, still"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "它",
+            "pinyin"    : "tā",
+            "meaning"   : "they (neologism for {1ta1}[3] [4]), [4]), ), this, that, it"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "中",
+            "pinyin"    : "zhōng",
+            "meaning"   : "center, middle, interior"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "使",
+            "pinyin"    : "shǐ",
+            "meaning"   : "rarefy, piss_off, germinate, drench, blow_out, leave, cut_up, refract, run, dress_up, compose, shed, frizz, put_off, trot, send, strike, send (as envoy), peal, alienate, pull_in, tone_up, bring around, astound, sublease, wither, cripple, bed_down, address, rehearse, usage, warm, smell_out, throw, inflect, get_down, skunk, capsize, congeal, bowl_over, bring_on, unseat, ensure, amalgamate, pro"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "工作",
+            "pinyin"    : "gōngzuò",
+            "meaning"   : "work, job"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "全",
+            "pinyin"    : "quán",
+            "meaning"   : "det.: all, Surname, whole, Quan"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "觉得",
+            "pinyin"    : "juéde",
+            "meaning"   : "imagine, guess, believe, reckon, suspect, suppose, think, listen, feel, consider, think_of, appear, conceive"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "使用",
+            "pinyin"    : "shǐyòng",
+            "meaning"   : "use, employ, apply"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "这些",
+            "pinyin"    : "zhèxiē",
+            "meaning"   : "det.: these"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "里",
+            "pinyin"    : "lǐ",
+            "meaning"   : "inside"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "并",
+            "pinyin"    : "bìng",
+            "meaning"   : "actually, truly"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "由于",
+            "pinyin"    : "yóuyū",
+            "meaning"   : "conj.: owing/due/thanks to"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "时候",
+            "pinyin"    : "shíhòu",
+            "meaning"   : "day, moment, (a point in) time, (duration of) time, time"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "知道",
+            "pinyin"    : "zhīdào",
+            "meaning"   : "tell, have, ken, understand, infer, wis, learn, cognize, gather, know, be aware of, wise up, savvy, mind, realize"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "这样",
+            "pinyin"    : "zhèyàng",
+            "meaning"   : "so, such, like this, this way"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "一",
+            "pinyin"    : "yī",
+            "meaning"   : "as soon as"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "认为",
+            "pinyin"    : "rènwéi",
+            "meaning"   : "find, treat, deem, suppose, look_on, repute, discount, esteem, accredit, feel, account, calculate, estimate, take to be, reckon, expect, think, hold, trust, recognise, opine, sound off, adjudge, consideration, consider, regard as, look upon, believe_in, disbelieve, allow, conceive, regard, call, imagine, view, forecast, believe, suspect, rate, animadvert, look on, listen, speak up, figure"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "时间",
+            "pinyin"    : "shíjiān",
+            "meaning"   : "moment, day, clock time, fourth_dimension, relativity, hour, duration, time, when, while, temporal, economy"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "事",
+            "pinyin"    : "shì",
+            "meaning"   : "responsibility, trouble, event, thing, worry, accident, case, involvement, work, affair, job, concern, business, toast, matter"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "过",
+            "pinyin"    : "guò",
+            "meaning"   : "[aspect]"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "向",
+            "pinyin"    : "xiàng",
+            "meaning"   : "to, towards"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "可能",
+            "pinyin"    : "kěnéng",
+            "meaning"   : "probably, maybe"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "中国",
+            "pinyin"    : "zhōngguó",
+            "meaning"   : "Cathay, China, china"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "美国",
+            "pinyin"    : "měiguó",
+            "meaning"   : "House_of_Representatives, the United States of America, US, U.S.A., bench, Columbia, Yankeeland, U.S., United States, Democrat, Yankeedom, USA, America, United States of America"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "到",
+            "pinyin"    : "dào",
+            "meaning"   : "arrive, reach, go to"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "和",
+            "pinyin"    : "hé",
+            "meaning"   : "together, with"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "几",
+            "pinyin"    : "jǐ",
+            "meaning"   : "det.: how many, a few, several, some"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "系统",
+            "pinyin"    : "xìtǒng",
+            "meaning"   : "lineage, filiation, scheme, pedigree, system, formation, superstructure, programme, organization, succession, tract, system of rules, organisation, program"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "政府",
+            "pinyin"    : "zhèngfǔ",
+            "meaning"   : "sirkar, state, country, nation, governmental, body politic, government, administration, civil order, polity, commonwealth, regime, res publica, land"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "大家",
+            "pinyin"    : "dàjiā",
+            "meaning"   : "sundry, great master, rich and influential family, pontiff, all of us, everyone, authority, master, distinguished family"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "国家",
+            "pinyin"    : "guójiā",
+            "meaning"   : "sirkar, state, country, patria, a people, nationality, nation, republic, soli, body politic, clime, national, civil order, polity, commonwealth, land, res publica"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "许多",
+            "pinyin"    : "xǔduō",
+            "meaning"   : "lot, scores, lots, sight, pot, heap, quantity, plenty, slews, ton, battalion, many, scads, tidy sum, power, spate, chunk, pile, crowd, vastness, batch, lashings, whole lot, mint, mound, pocketful, large number, trunkful, ream, mickle, great deal, flock, mass, slew, heaps, a lot of, piles, whole slew, mess, raff, slue, gobs, much, lotta, multitude, volume, wad, store, raft, tons, satiety, rafts, doze"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "生活",
+            "pinyin"    : "shēnghuó",
+            "meaning"   : "life, existence, livelihood"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "跟",
+            "pinyin"    : "gēn",
+            "meaning"   : "with, to, from"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "已经",
+            "pinyin"    : "yǐjīng",
+            "meaning"   : "already"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "大学",
+            "pinyin"    : "dàxué",
+            "meaning"   : "university, college"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "研究",
+            "pinyin"    : "yánjiù",
+            "meaning"   : "study, research"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "因",
+            "pinyin"    : "yīn",
+            "meaning"   : "conj.: because, as"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "本",
+            "pinyin"    : "běn",
+            "meaning"   : "det.: this"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "二",
+            "pinyin"    : "èr",
+            "meaning"   : "det.: two, second"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "活动",
+            "pinyin"    : "huódòng",
+            "meaning"   : "activity, maneuver, behavior"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "该",
+            "pinyin"    : "gāi",
+            "meaning"   : "det.: this, that"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "世界",
+            "pinyin"    : "shìjiè",
+            "meaning"   : "mundane, creation, world, monde, orb, nature, domain"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "应",
+            "pinyin"    : "yīng",
+            "meaning"   : "should, ought to"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "四",
+            "pinyin"    : "sì",
+            "meaning"   : "det.: four"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "希望",
+            "pinyin"    : "xīwàng",
+            "meaning"   : "hope, wish"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "方式",
+            "pinyin"    : "fāngshì",
+            "meaning"   : "path, plan, pattern, tenor, system, method, manner, style, way, guise, fashion, wise, means, shape, how, embodiment, agency, gate, mode, sort"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "内",
+            "pinyin"    : "nèi",
+            "meaning"   : "inside"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "项",
+            "pinyin"    : "xiàng",
+            "meaning"   : "m.[general], item, term, nape, thing, infinite, vast"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "啊",
+            "pinyin"    : "ā",
+            "meaning"   : "particle: used in direct address and exclamation; indicating obviousness/impatience/suggestion; used for confirmation"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "下",
+            "pinyin"    : "xià",
+            "meaning"   : "under (condition/fact etc.)"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "环境",
+            "pinyin"    : "huánjìng",
+            "meaning"   : "circumambiency, environmental, circumstances, environment, entourage, surround, atmosphere, setting, surroundings, ambiance, condition, context, circumstance, surrounding, frame, milieu, ambient, consideration, environs, medium, ambience"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "一些",
+            "pinyin"    : "yīxiē",
+            "meaning"   : "det.: some, a few, a little"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "必须",
+            "pinyin"    : "bìxū",
+            "meaning"   : "must"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "文化",
+            "pinyin"    : "wénhuà",
+            "meaning"   : "civilization, literacy, acculturation, Kultur, vandalism, cultural, education, schooling, culture"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "高",
+            "pinyin"    : "gāo",
+            "meaning"   : "tall, high"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "孩子",
+            "pinyin"    : "háizi",
+            "meaning"   : "kid, issue, chap, daughter, children, sonny, son or daughter, child, spawn, boy, kipper, son"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "没有",
+            "pinyin"    : "méiyǒu",
+            "meaning"   : "not have, there is not, be without"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "不能",
+            "pinyin"    : "bùnéng",
+            "meaning"   : "must/may/can not, not be allowed"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "如",
+            "pinyin"    : "rú",
+            "meaning"   : "according to, in accordance with, such as, as if, like, for example"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "开始",
+            "pinyin"    : "kāishǐ",
+            "meaning"   : "begin, start"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "元",
+            "pinyin"    : "yuán",
+            "meaning"   : "m.[standard], basic, primary, first, (used as currency in China)"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "不同",
+            "pinyin"    : "bùtóng",
+            "meaning"   : "different"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "仍",
+            "pinyin"    : "réng",
+            "meaning"   : "yet, anyway, still"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "网路",
+            "pinyin"    : "wǎnglù",
+            "meaning"   : "WWW, net, network, Internet, meshwork, web, world wide web, mesh, reticulation"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "日本",
+            "pinyin"    : "rìběn",
+            "meaning"   : "Nippon, Cipango, Nihon, Japan, japan, Japanese"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "用",
+            "pinyin"    : "yòng",
+            "meaning"   : "with"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "中心",
+            "pinyin"    : "zhōngxīn",
+            "meaning"   : "center, heart, hub"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "来",
+            "pinyin"    : "lái",
+            "meaning"   : "come, arrive"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "对",
+            "pinyin"    : "duì",
+            "meaning"   : "right; correct"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "虽然",
+            "pinyin"    : "suīrán",
+            "meaning"   : "conj.: though, although"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "重要",
+            "pinyin"    : "zhòngyào",
+            "meaning"   : "important, significant, major"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "地方",
+            "pinyin"    : "dìfāng",
+            "meaning"   : "country, soil, terrain, part, clime, way, territory, room, neighbourhood, tinderbox, locality (as distinct from the central administrat, child, tract, province, position, respect, where, region, space, place, local"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "进行",
+            "pinyin"    : "jìnxíng",
+            "meaning"   : "be in progress, go on, carry on/out"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "关系",
+            "pinyin"    : "guānxì",
+            "meaning"   : "relation, bearing, impact, membership credentials, 'backdoor connections'"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "市场",
+            "pinyin"    : "shìchǎng",
+            "meaning"   : "bourse, bazar, marketplace, grocery store, agora, bazaar, securities industry, grocery, piazza, plaza, rialto, mart, pitch, market"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "太",
+            "pinyin"    : "tài",
+            "meaning"   : "excessively, too, extremely, very"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "老师",
+            "pinyin"    : "lǎoshī",
+            "meaning"   : "rabbi, professor, swami, instructor, teacher, mast"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "提供",
+            "pinyin"    : "tígōng",
+            "meaning"   : "feed, offer, put_up, afford, proffer, set_up, capitalize, bring_forward, sponsor, extend, ply, provision, sustain, equip, supply, cough_up, bear, render, furnish, cater, billet, provide"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "学校",
+            "pinyin"    : "xuéxiào",
+            "meaning"   : "seminary, schoolhouse, educational institution, school, institution"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "应该",
+            "pinyin"    : "yīnggāi",
+            "meaning"   : "should, ought to"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "指出",
+            "pinyin"    : "zhǐchū",
+            "meaning"   : "point, point_out, catch_out, bespeak, indicate, denote, point out (that), note, show, designate, point out"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "经济",
+            "pinyin"    : "jīngjì",
+            "meaning"   : "economy, financial condition, income"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "其他",
+            "pinyin"    : "qítā",
+            "meaning"   : "det.: others, the rest, other, else"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "家",
+            "pinyin"    : "jiā",
+            "meaning"   : "family, household, home, house"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "发展",
+            "pinyin"    : "fāzhǎn",
+            "meaning"   : "develop, expand, grow"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "教育",
+            "pinyin"    : "jiàoyū",
+            "meaning"   : "education"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "成为",
+            "pinyin"    : "chéngwéi",
+            "meaning"   : "find, join, comprise, turn to, commemorate, sample, entomb, come_up, commence, get hold, learn, add up, necessitate, run, make up, constitute, make, form, come, amount, represent, fall, presage, change, be, turn, turn into, become, line up, come up, shape, portend, foretell, get"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "多",
+            "pinyin"    : "duō",
+            "meaning"   : "many, much, more, more than the correct/required number, excessive, too much, much/far more"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "非常",
+            "pinyin"    : "fēicháng",
+            "meaning"   : "extraordinary, unusual, special, very, extremely, highly"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "便",
+            "pinyin"    : "biàn",
+            "meaning"   : "as early as, soon afterwards, little as, as early, and then, and so, so, as early/little as, as little as, then, in that case"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "方面",
+            "pinyin"    : "fāngmiàn",
+            "meaning"   : "side, aspect, sector, part, light, facet, behalf, way, respect, direction, bearing, field, phase, sphere, angle, hand"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "很多",
+            "pinyin"    : "hěnduō",
+            "meaning"   : "a lot of, very many"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "吃",
+            "pinyin"    : "chī",
+            "meaning"   : "feed, have, be subject to, absorb, chow, live on, eat, have one's meals, be a strain, exhaust, fare, take in, live off, annihilate, wipe out, partake, suffer, ingest, consume, graze, lunch, manducate, incur, take, get, use up, make, taste, soak up"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "然后",
+            "pinyin"    : "ránhòu",
+            "meaning"   : "therewith, and so, and_then, and then, thereupon, after that, so, then, with that"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "未",
+            "pinyin"    : "wèi",
+            "meaning"   : "or not (at end of sentence), have not yet, or not, not"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "发现",
+            "pinyin"    : "fāxiàn",
+            "meaning"   : "find, discover"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "电脑",
+            "pinyin"    : "diànnǎo",
+            "meaning"   : "electronic computer, computery, data processor, information processing system, computer"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "一样",
+            "pinyin"    : "yīyàng",
+            "meaning"   : "same, equal, similar"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "而且",
+            "pinyin"    : "érqiě",
+            "meaning"   : "conj.: furthermore, and"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "心",
+            "pinyin"    : "xīn",
+            "meaning"   : "heart, mind, feeling, center, core"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "不过",
+            "pinyin"    : "búguò",
+            "meaning"   : "conj.: but, however, only"
+        },
+        {
+            "trad"      : "",
+            "simp"      : "无法",
+            "pinyin"    : "wúfǎ",
+            "meaning"   : "nohow, unable to, unable, cannot"
+        }
+]
