@@ -389,7 +389,21 @@ class TextCleanerTest {
         assertEquals("ķill", TextCleaner.clean("ķill", null)) // accents only removed for English
         assertEquals("Aira's breasts, dead, hell", TextCleaner.clean("Aira's ɓreasts, đead, ħell", "en"))
         assertEquals("kill and kill", TextCleaner.clean("𝐤𝐢𝐥𝐥 and ｋｉｌｌ", "en"))
+        assertEquals("What the fuck", TextCleaner.clean("What the fųck", "en"))
         assertEquals("Łukasz", TextCleaner.clean("Łukasz", null)) // Polish names untouched outside English
+    }
+
+    @Test
+    fun removesSiteWatermarks() {
+        assertEquals("He raised his hand.", TextCleaner.clean("He raised his hand. ɼ𝖆NóＢÈs", "en"))
+        assertEquals("She smiled.", TextCleaner.clean("She smiled. Read the latest chapters at novelbin.com!", "en"))
+        assertEquals("", TextCleaner.clean("This chapter is updated by freewebnovel.com", "en"))
+        val long = "He walked for hours through the rain, thinking about the war, the lost friends and the " +
+            "long road home (novelbin) until night fell."
+        assertEquals(
+            "He walked for hours through the rain, thinking about the war, the lost friends and the long road home () until night fell.",
+            TextCleaner.clean(long, "en"),
+        )
     }
 
     @Test
@@ -411,7 +425,7 @@ class TextCleanerTest {
             "Fruit, e.g. apples, i.e. red ones.",
             "He flew to the U.S.A. last year.",
             "J.K. Rowling wrote it.",
-            "Read it on empirenovel.com today.",
+            "Read it on example.com today.",
             "Visit www.novel.co.uk now.",
             "Read on my-novel-site.com today.",
             "It cost 3.5 coins.",

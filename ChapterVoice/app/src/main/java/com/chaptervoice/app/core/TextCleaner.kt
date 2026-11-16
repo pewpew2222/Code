@@ -62,7 +62,39 @@ object TextCleaner {
         var result = fixSymbols(text)
         result = fixLookAlikeLetters(result)
         if (language == "en") result = toPlainLatin(result)
-        return removeCensorDots(result)
+        result = removeCensorDots(result)
+        return removeWatermarks(result)
+    }
+
+    // ---------------------------------------------------------------- watermarks
+
+    /** Novel sites that stamp their name into copied chapters ("ɼａＮóＢÈs" -> "raNoBEs"). */
+    private val WATERMARK_SITES = listOf(
+        "ranobes", "novelbin", "novelfull", "readnovelfull", "lightnovelpub", "lightnovelworld",
+        "lightnovelcave", "lightnovelspot", "novelfire", "freewebnovel", "novelbuddy", "mvlempyr",
+        "empirenovel", "boxnovel", "novelhall", "pandanovel", "readlightnovel", "novelnext", "noveltrust",
+        "novelusb", "novelfever", "allnovelfull", "novelbjn", "lnreader",
+    )
+    private val WATERMARK = Regex(
+        "\\b(?:" + WATERMARK_SITES.joinToString("|") + ")(?:\\s*[.,]\\s*(?:com|net|org|me|io|co|cc|site|info))?\\b",
+        RegexOption.IGNORE_CASE,
+    )
+    private const val WATERMARK_SENTENCE_MAX = 120
+    private val SENTENCE_BREAK = Regex("(?<=[.!?。！？…\"”])\\s+")
+
+    /** Drops short sentences that name such a site; in longer ones only the name goes. */
+    private fun removeWatermarks(text: String): String {
+        if (!WATERMARK.containsMatchIn(text)) return text
+        // A plain split at sentence ends: a stamp like "hand. ranobes" must stay its own part.
+        return text.split(SENTENCE_BREAK)
+            .mapNotNull { sentence ->
+                when {
+                    !WATERMARK.containsMatchIn(sentence) -> sentence
+                    sentence.length <= WATERMARK_SENTENCE_MAX -> null
+                    else -> WATERMARK.replace(sentence, "").replace(Regex("\\s{2,}"), " ").trim()
+                }
+            }
+            .joinToString(" ")
     }
 
     private fun removeCensorDots(text: String): String = DOTTED.replace(text) { match ->
@@ -120,7 +152,7 @@ object TextCleaner {
         'ɇ' to 'e', 'ǝ' to 'e', 'ɛ' to 'e', 'ƒ' to 'f', 'ɠ' to 'g', 'ǥ' to 'g', 'ɡ' to 'g', 'ħ' to 'h',
         'ɦ' to 'h', 'ı' to 'i', 'ɨ' to 'i', 'ɩ' to 'i', 'ȷ' to 'j', 'ɉ' to 'j', 'ƙ' to 'k', 'ꝁ' to 'k',
         'ł' to 'l', 'ŀ' to 'l', 'ƚ' to 'l', 'ɫ' to 'l', 'ɱ' to 'm', 'ɲ' to 'n', 'ƞ' to 'n', 'ŋ' to 'n',
-        'ø' to 'o', 'ɵ' to 'o', 'ɔ' to 'o', 'ƥ' to 'p', 'ɋ' to 'q', 'ɍ' to 'r', 'ɽ' to 'r', 'ʂ' to 's',
+        'ø' to 'o', 'ɵ' to 'o', 'ɔ' to 'o', 'ƥ' to 'p', 'ɋ' to 'q', 'ɍ' to 'r', 'ɽ' to 'r', 'ɼ' to 'r', 'ɾ' to 'r', 'ɹ' to 'r', 'ʀ' to 'r', 'ʂ' to 's',
         'ŧ' to 't', 'ƭ' to 't', 'ʈ' to 't', 'ʉ' to 'u', 'ʋ' to 'v', 'ʌ' to 'v', 'ɏ' to 'y', 'ƴ' to 'y',
         'ƶ' to 'z', 'ʐ' to 'z', 'ȥ' to 'z', 'ƈ' to 'c', 'ȼ' to 'c',
         'Ɓ' to 'B', 'Ƀ' to 'B', 'Ɗ' to 'D', 'Đ' to 'D', 'Ɇ' to 'E', 'Ɛ' to 'E', 'Ƒ' to 'F', 'Ɠ' to 'G',
