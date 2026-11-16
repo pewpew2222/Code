@@ -36,6 +36,7 @@ import com.chaptervoice.app.core.Chapter
 import com.chaptervoice.app.core.ChapterFetcher
 import com.chaptervoice.app.core.ChapterParser
 import com.chaptervoice.app.core.TextChunker
+import com.chaptervoice.app.core.TextCleaner
 import com.chaptervoice.app.data.BookmarkStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -286,7 +287,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         val text = buildList {
             if (settings.readTitle && loaded.title.isNotBlank()) add(loaded.title)
             addAll(loaded.paragraphs)
-        }
+        }.map { TextCleaner.clean(it) }
         pieces = TextChunker.chunk(text, maxPieceLength())
         index = 0
         mediaSession.setMetadata(

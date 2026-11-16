@@ -277,3 +277,32 @@ class HostBlocklistTest {
         assertFalse(list.isBlocked("localhost"))
     }
 }
+
+class TextCleanerTest {
+
+    @Test
+    fun removesCensorDotsInsideWords() {
+        assertEquals("The ships could succumb.", TextCleaner.clean("The sh.i.p.s could succ.u.m.b."))
+        assertEquals("Wang Teng's family", TextCleaner.clean("w.a.n.g Teng's family").replaceFirst("wang", "Wang"))
+        assertEquals("time passed very quickly.", TextCleaner.clean("time pa.s.sed very quickly."))
+        assertEquals("W.a.n.g Teng".let { TextCleaner.clean(it) }, "Wang Teng")
+        assertEquals("“Wang’s house,” she said.", TextCleaner.clean("“W.a.n.g’s house,” she said."))
+    }
+
+    @Test
+    fun keepsAbbreviationsInitialsAddressesAndNumbers() {
+        val untouched = listOf(
+            "It was 7 a.m. and he left.",
+            "Fruit, e.g. apples, i.e. red ones.",
+            "He flew to the U.S.A. last year.",
+            "J.K. Rowling wrote it.",
+            "Read it on empirenovel.com today.",
+            "Visit www.novel.co.uk now.",
+            "It cost 3.5 coins.",
+            "He paused... then left.",
+            "Mr. Smith and Dr.Who met.",
+            "Wait.What?",
+        )
+        untouched.forEach { assertEquals(it, TextCleaner.clean(it)) }
+    }
+}
