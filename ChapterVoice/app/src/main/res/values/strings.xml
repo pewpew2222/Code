@@ -62,6 +62,25 @@
     <string name="search_sites">Sök webbplatser och bokmärken…</string>
     <string name="sites_count">%1$d st · A–Ö</string>
 
+    <string name="blocker_title">Reklamblockering på sidan</string>
+    <string name="blocker_summary">%1$s hämtar från %2$d andra domäner. %3$d blockeras.</string>
+    <string name="blocker_hint">Slå på reglaget för att blockera en domän, eller av för att tillåta den. Ladda om sidan för att se ändringen. Annonser som sajten själv levererar tar du bort med "Dölj element".</string>
+    <string name="blocker_disabled">Reklamblockeringen är avstängd i inställningarna.</string>
+    <string name="blocker_empty">Sidan har inte hämtat något från andra domäner än. Ladda om sidan och försök igen.</string>
+    <string name="reload_list">Uppdatera listan</string>
+    <string name="requests_count">%1$d anrop</string>
+    <string name="status_blocked_list">Blockerad (lista)</string>
+    <string name="status_blocked_you">Blockerad av dig</string>
+    <string name="status_allowed_you">Tillåten av dig</string>
+    <string name="status_allowed">Tillåten</string>
+    <string name="hide_element">Dölj element</string>
+    <string name="hidden_elements">%1$d dolda element på den här sajten</string>
+    <string name="hidden_elements_reset">Visa igen</string>
+    <string name="pick_instruction">Tryck på annonsen du vill dölja.</string>
+    <string name="pick_selected">Det röda markerade döljs på hela sajten:</string>
+    <string name="pick_larger">Större</string>
+    <string name="pick_hide">Dölj</string>
+
     <string name="setting_rate">Hastighet: %1$.1f×</string>
     <string name="setting_pitch">Tonhöjd: %1$.1f</string>
     <string name="setting_auto_continue">Fortsätt automatiskt till nästa kapitel</string>

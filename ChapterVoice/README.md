@@ -19,7 +19,8 @@ vidare till nästa kapitel. Gjord för webbnoveller.
   genväg till systemets röst- och språkval.
 - **Reklamblockering** i webbläsaren: anrop till cirka 76 000 kända reklam- och spårningsdomäner
   stoppas, vanliga reklamrutor döljs, och popup-fönster samt omdirigeringar till appbutiker blockeras.
-  Listan följer med appen och uppdateras automatiskt en gång i veckan. Den går att stänga av i inställningarna.
+  Listan följer med appen och uppdateras automatiskt en gång i veckan, kompletterad med en egen lista över annonsnätverk som är vanliga på novellsajter (Adsterra, Monetag, Ezoic m.fl.).
+  Under ⋮ → Reklamblockering på sidan ser du vilka domäner sidan hämtar från och kan blockera eller tillåta dem, och med "Dölj element" trycker du på en annons för att dölja den på hela sajten. Blockeringen går att stänga av i inställningarna.
 - **Flikar och bokmärken** som i en vanlig webbläsare. Flikarna sparas mellan starterna, ett långt tryck på en länk ger "Öppna i ny flik", och en ny flik visar en startsida med snabbnavigering (bokmärken och novellsajter per språk, med sökning). Ett bokmärkt kapitel flyttas automatiskt med när uppläsningen går till nästa kapitel, så bokmärket fungerar som läsmarkör.
 - **Historik** över besökta sidor, grupperad per dag, med sökning.
 - Dela en länk från vilken webbläsare som helst till appen för att öppna den.

@@ -407,7 +407,7 @@ private fun Chevron() {
 }
 
 @Composable
-private fun Header(title: String, actions: @Composable () -> Unit) {
+internal fun Header(title: String, actions: @Composable () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -420,7 +420,7 @@ private fun Header(title: String, actions: @Composable () -> Unit) {
 }
 
 @Composable
-private fun CloseButton(onClose: () -> Unit) {
+internal fun CloseButton(onClose: () -> Unit) {
     IconButton(onClick = onClose) {
         Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
     }
@@ -447,7 +447,7 @@ private fun SearchField(value: String, onChange: (String) -> Unit, hint: String)
 }
 
 @Composable
-private fun EmptyText(text: String) {
+internal fun EmptyText(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.bodyMedium,

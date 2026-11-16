@@ -63,7 +63,7 @@ import com.chaptervoice.app.service.ReaderState
 import com.chaptervoice.app.service.ReaderStatus
 import org.json.JSONTokener
 
-private enum class Overlay { NONE, TABS, BOOKMARKS, HISTORY }
+private enum class Overlay { NONE, TABS, BOOKMARKS, HISTORY, BLOCKER }
 
 @Composable
 fun ReaderScreen(
@@ -96,6 +96,7 @@ fun ReaderScreen(
     }
 
     BackHandler(enabled = overlay != Overlay.NONE) { overlay = Overlay.NONE }
+    BackHandler(enabled = overlay == Overlay.NONE && tabs.pickTabId == active.id) { tabs.cancelPick() }
     BackHandler(enabled = overlay == Overlay.NONE && active.canGoBack) { active.goBack() }
 
     LaunchedEffect(incomingUrl) {
@@ -183,6 +184,11 @@ fun ReaderScreen(
                         onClick = { showMenu = false; active.reload() },
                     )
                     DropdownMenuItem(
+                        text = { Text(stringResource(R.string.blocker_title)) },
+                        enabled = active.url.isNotEmpty(),
+                        onClick = { showMenu = false; overlay = Overlay.BLOCKER },
+                    )
+                    DropdownMenuItem(
                         text = { Text(stringResource(R.string.settings)) },
                         onClick = { showMenu = false; showSettings = true },
                     )
@@ -218,11 +224,29 @@ fun ReaderScreen(
                     onClear = { historyStore.clear() },
                     onClose = { overlay = Overlay.NONE },
                 )
+                overlay == Overlay.BLOCKER -> BlockerScreen(
+                    tab = active,
+                    adBlockEnabled = settings.adBlock,
+                    onHideElement = { overlay = Overlay.NONE; tabs.startPick(active) },
+                    onRulesChanged = { tabs.applyAdCss(active) },
+                    onReload = { overlay = Overlay.NONE; active.reload() },
+                    onClose = { overlay = Overlay.NONE },
+                )
                 active.url.isEmpty() -> StartPage(
                     bookmarks = bookmarks,
                     onOpen = { open(it) },
                 )
-                else -> ActiveWebView(active)
+                else -> Column {
+                    if (tabs.pickTabId == active.id) {
+                        PickBar(
+                            selector = tabs.pickSelector,
+                            onLarger = { tabs.pickLarger() },
+                            onHide = { tabs.confirmPick() },
+                            onCancel = { tabs.cancelPick() },
+                        )
+                    }
+                    ActiveWebView(active)
+                }
             }
         }
 

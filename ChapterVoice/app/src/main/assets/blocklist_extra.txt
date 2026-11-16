@@ -1,0 +1,32 @@
+# Ad networks common on web novel and manga sites that the main list misses.
+# Always used in addition to blocklist_hosts.txt.
+adsterra.com
+adsterratech.com
+highperformanceformat.com
+profitabledisplaynetwork.com
+effectiveratecpm.com
+highcpmgate.com
+highcpmrevenuegate.com
+displaycontentnetwork.com
+monetag.com
+onclickalgo.com
+ezojs.com
+ezodn.com
+ezoic.net
+ezoiccdn.com
+hilltopads.com
+exdynsrv.com
+pubmatic.com
+primis.tech
+playwire.com
+venatus.com
+nitropay.com
+freestar.io
+snigelweb.com
+pubfuture-ad.com
+pubfuture.com
+setupad.net
+raptive.com
+cafemedia.com
+dtscdn.com
+galaksion.com
