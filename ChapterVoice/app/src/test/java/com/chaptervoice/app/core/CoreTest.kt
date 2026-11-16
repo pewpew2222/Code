@@ -160,6 +160,26 @@ class ContentExtractorTest {
     }
 
     @Test
+    fun novelPhoenixCutsEverythingFromShareHeading() {
+        val html = """
+            <div class="wrap"><div id="chapter-content">
+              $story
+              <p>What in the world...?</p>
+              <div class="box"><span>Share to your friends</span><button>f</button></div>
+              <p>Read the latest chapters first at our site, updated every single day for you!</p>
+              <p>Use the navigation buttons below to continue reading the next chapter now.</p>
+            </div><p>Outside text after the container that should not be read either.</p></div>
+        """.trimIndent()
+
+        val phoenix = ContentExtractor.extract(Jsoup.parse(html, "https://novelphoenix.com/novel/x/chapter-2"))
+        assertEquals("What in the world...?", phoenix.paragraphs.last())
+
+        // Other sites are not cut at the share heading.
+        val other = ContentExtractor.extract(Jsoup.parse(html, "https://other.com/novel/x/chapter-2"))
+        assertTrue(other.paragraphs.last().startsWith("Use the navigation buttons"))
+    }
+
+    @Test
     fun keepsStoryLinesThatStartWithNavigationWords() {
         val html = """<div id="chapter-content">$story<p>Next, he opened the door.</p><p>Next</p></div>"""
         val result = ContentExtractor.extract(Jsoup.parse(html, "https://s.com/c1"))

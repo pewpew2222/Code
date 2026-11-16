@@ -70,6 +70,17 @@ object ContentExtractor {
 
     private const val SHARE_BOX_MAX_CHARS = 120
 
+    /**
+     * Site-specific fixes. On a matching site, the first element whose own text matches
+     * [cutFrom] marks the end of the chapter: it and everything after it is dropped.
+     */
+    private data class SiteRule(val host: String, val cutFrom: Regex)
+
+    private val SITE_RULES = listOf(
+        // Ends each chapter with a share box followed by two more paragraphs of site text.
+        SiteRule("novelphoenix.com", Regex("^share to your friends$", RegexOption.IGNORE_CASE)),
+    )
+
     data class Extracted(val title: String, val paragraphs: List<String>)
 
     fun extract(original: Document): Extracted {
@@ -77,6 +88,7 @@ object ContentExtractor {
         val title = findTitle(doc)
 
         val body = doc.body() ?: return Extracted(title, emptyList())
+        applySiteRules(body, doc.location())
         removeShareBoxes(body)
         JUNK_SELECTORS.forEach { selector -> runCatching { body.select(selector).remove() } }
 
@@ -86,6 +98,30 @@ object ContentExtractor {
             .let { dropLeadingTitle(it, title) }
 
         return Extracted(title, paragraphs)
+    }
+
+    private fun applySiteRules(body: Element, url: String) {
+        val host = runCatching { java.net.URI(url).host.orEmpty().lowercase() }.getOrDefault("")
+        for (rule in SITE_RULES) {
+            if (host != rule.host && !host.endsWith("." + rule.host)) continue
+            val marker = body.allElements.firstOrNull { rule.cutFrom.matches(it.ownText().trim()) } ?: continue
+            removeFrom(marker, body)
+        }
+    }
+
+    /** Removes [start] and every node after it in document order, up to [root]. */
+    private fun removeFrom(start: Element, root: Element) {
+        var node: Node = start
+        while (node !== root) {
+            val parent = node.parent() ?: break
+            // Drop everything after this node on its level, then move up one level.
+            while (true) {
+                val next = node.nextSibling() ?: break
+                next.remove()
+            }
+            node = parent
+        }
+        start.remove()
     }
 
     /**
