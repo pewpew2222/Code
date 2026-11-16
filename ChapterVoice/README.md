@@ -20,7 +20,8 @@ vidare till nästa kapitel. Gjord för webbnoveller.
 - **Reklamblockering** i webbläsaren: anrop till cirka 76 000 kända reklam- och spårningsdomäner
   stoppas, vanliga reklamrutor döljs, och popup-fönster samt omdirigeringar till appbutiker blockeras.
   Listan följer med appen och uppdateras automatiskt en gång i veckan. Den går att stänga av i inställningarna.
-- **Flikar och bokmärken** som i en vanlig webbläsare. Flikarna sparas mellan starterna, ett långt tryck på en länk ger "Öppna i ny flik", och en ny flik visar bokmärkena som startsida. Ett bokmärkt kapitel flyttas automatiskt med när uppläsningen går till nästa kapitel, så bokmärket fungerar som läsmarkör.
+- **Flikar och bokmärken** som i en vanlig webbläsare. Flikarna sparas mellan starterna, ett långt tryck på en länk ger "Öppna i ny flik", och en ny flik visar en startsida med snabbnavigering (bokmärken och novellsajter per språk, med sökning). Ett bokmärkt kapitel flyttas automatiskt med när uppläsningen går till nästa kapitel, så bokmärket fungerar som läsmarkör.
+- **Historik** över besökta sidor, grupperad per dag, med sökning.
 - Dela en länk från vilken webbläsare som helst till appen för att öppna den.
 - Första kapitlet läses från sidan som webbläsaren visar. Följande kapitel hämtas med
   webbläsarens cookies och user agent, vilket fungerar på de flesta sidor med Cloudflare-skydd.

@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.chaptervoice.app.AdBlocker
 import com.chaptervoice.app.AppSettings
+import com.chaptervoice.app.data.HistoryStore
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -88,6 +89,7 @@ class TabManager(private val context: Context, private val settings: AppSettings
 
     private val prefs = context.getSharedPreferences("tabs", Context.MODE_PRIVATE)
     private var nextId = 1L
+    private val history = HistoryStore.get(context)
 
     init {
         restore()
@@ -123,12 +125,6 @@ class TabManager(private val context: Context, private val settings: AppSettings
         }
         if (activeId == id) activeId = tabs[(index - 1).coerceAtLeast(0)].id
         save()
-    }
-
-    fun closeAll() {
-        tabs.forEach { it.destroy() }
-        tabs.clear()
-        newTab()
     }
 
     fun destroyAll() = tabs.forEach { it.destroy() }
@@ -200,6 +196,7 @@ class TabManager(private val context: Context, private val settings: AppSettings
                 tab.title = view.title.orEmpty()
                 tab.canGoBack = view.canGoBack()
                 tab.canGoForward = view.canGoForward()
+                history.record(url, view.title.orEmpty())
                 save()
             }
 
@@ -229,6 +226,7 @@ class TabManager(private val context: Context, private val settings: AppSettings
 
             override fun onReceivedTitle(view: WebView, title: String?) {
                 tab.title = title.orEmpty()
+                view.url?.let { history.updateTitle(it, title.orEmpty()) }
             }
 
             /**

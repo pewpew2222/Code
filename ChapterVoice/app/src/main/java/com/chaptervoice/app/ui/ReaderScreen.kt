@@ -57,12 +57,13 @@ import com.chaptervoice.app.R
 import com.chaptervoice.app.browser.BrowserTab
 import com.chaptervoice.app.browser.TabManager
 import com.chaptervoice.app.data.BookmarkStore
+import com.chaptervoice.app.data.HistoryStore
 import com.chaptervoice.app.service.ReaderService
 import com.chaptervoice.app.service.ReaderState
 import com.chaptervoice.app.service.ReaderStatus
 import org.json.JSONTokener
 
-private enum class Overlay { NONE, TABS, BOOKMARKS }
+private enum class Overlay { NONE, TABS, BOOKMARKS, HISTORY }
 
 @Composable
 fun ReaderScreen(
@@ -76,6 +77,8 @@ fun ReaderScreen(
     val state by ReaderState.state.collectAsStateWithLifecycle()
     val bookmarkStore = remember { BookmarkStore.get(context) }
     val bookmarks by bookmarkStore.items.collectAsStateWithLifecycle()
+    val historyStore = remember { HistoryStore.get(context) }
+    val history by historyStore.items.collectAsStateWithLifecycle()
 
     val active = tabs.active
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
@@ -166,6 +169,10 @@ fun ReaderScreen(
                         onClick = { showMenu = false; overlay = Overlay.BOOKMARKS },
                     )
                     DropdownMenuItem(
+                        text = { Text(stringResource(R.string.history)) },
+                        onClick = { showMenu = false; overlay = Overlay.HISTORY },
+                    )
+                    DropdownMenuItem(
                         text = { Text(stringResource(R.string.forward)) },
                         enabled = active.canGoForward,
                         onClick = { showMenu = false; active.goForward() },
@@ -196,7 +203,6 @@ fun ReaderScreen(
                     onSelect = { tabs.select(it); overlay = Overlay.NONE },
                     onClose = { tabs.close(it) },
                     onNewTab = { tabs.newTab(); overlay = Overlay.NONE },
-                    onCloseAll = { tabs.closeAll(); overlay = Overlay.NONE },
                 )
                 overlay == Overlay.BOOKMARKS -> BookmarksList(
                     bookmarks = bookmarks,
@@ -205,10 +211,16 @@ fun ReaderScreen(
                     onDelete = { bookmarkStore.remove(it) },
                     onClose = { overlay = Overlay.NONE },
                 )
+                overlay == Overlay.HISTORY -> HistoryList(
+                    history = history,
+                    onOpen = { open(it) },
+                    onDelete = { historyStore.remove(it) },
+                    onClear = { historyStore.clear() },
+                    onClose = { overlay = Overlay.NONE },
+                )
                 active.url.isEmpty() -> StartPage(
                     bookmarks = bookmarks,
                     onOpen = { open(it) },
-                    onDelete = { bookmarkStore.remove(it) },
                 )
                 else -> ActiveWebView(active)
             }

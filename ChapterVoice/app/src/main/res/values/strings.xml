@@ -39,7 +39,6 @@
     <string name="tab_new">Ny flik</string>
     <string name="tab_close">Stäng flik</string>
     <string name="tabs_title">Flikar (%1$d)</string>
-    <string name="tabs_close_all">Stäng alla</string>
     <string name="tab_reading">Läses upp · %1$s</string>
     <string name="start_page">Ny flik</string>
     <string name="open_in_new_tab">Öppna i ny flik</string>
@@ -48,6 +47,20 @@
     <string name="bookmark_add">Lägg till bokmärke</string>
     <string name="bookmark_remove">Ta bort bokmärke</string>
     <string name="bookmarks_empty">Inga bokmärken än. Tryck på stjärnan i adressfältet för att spara en sida. Ett bokmärkt kapitel följer med automatiskt när uppläsningen går vidare till nästa kapitel.</string>
+
+    <string name="history">Historik</string>
+    <string name="history_today">Idag</string>
+    <string name="history_yesterday">Igår</string>
+    <string name="history_search">Sök i historiken</string>
+    <string name="history_remove">Ta bort från historiken</string>
+    <string name="history_clear">Rensa</string>
+    <string name="history_clear_title">Rensa historiken?</string>
+    <string name="history_clear_text">Alla besökta sidor tas bort. Bokmärken och flikar påverkas inte.</string>
+    <string name="history_empty">Ingen historik än.</string>
+    <string name="cancel">Avbryt</string>
+    <string name="no_matches">Inga träffar.</string>
+    <string name="search_sites">Sök webbplatser och bokmärken…</string>
+    <string name="sites_count">%1$d st · A–Ö</string>
 
     <string name="setting_rate">Hastighet: %1$.1f×</string>
     <string name="setting_pitch">Tonhöjd: %1$.1f</string>
