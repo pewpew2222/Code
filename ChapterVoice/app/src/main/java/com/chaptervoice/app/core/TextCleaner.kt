@@ -33,8 +33,11 @@ object TextCleaner {
     @Volatile
     var dictionary: Dictionary? = null
 
-    /** Letters and dots with no spaces, optionally ending in a dot. */
-    private val DOTTED = Regex("(?<![\\p{L}\\p{N}.@/_-])(\\p{L}+(?:\\.\\p{L}+)+)(\\.?)(?![\\p{L}\\p{N}@/_-])")
+    /**
+     * Letters and dots with no spaces, optionally ending in a dot. Hyphens may sit on
+     * either side, so each part of "high-cla.s.s" is checked on its own.
+     */
+    private val DOTTED = Regex("(?<![\\p{L}\\p{N}.@/_])(\\p{L}+(?:\\.\\p{L}+)+)(\\.?)(?![\\p{L}\\p{N}@/_])")
 
     private val ABBREVIATIONS = setOf(
         "a.m", "p.m", "e.g", "i.e", "a.k.a", "r.i.p", "u.s", "u.k", "u.s.a", "n.b", "p.s", "q.e.d",

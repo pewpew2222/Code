@@ -361,6 +361,11 @@ class TextCleanerTest {
         assertEquals("The ships could succumb.", TextCleaner.clean("The sh.i.p.s could succ.u.m.b."))
         assertEquals("Wang Teng's family", TextCleaner.clean("w.a.n.g Teng's family").replaceFirst("wang", "Wang"))
         assertEquals("time passed very quickly.", TextCleaner.clean("time pa.s.sed very quickly."))
+        assertEquals(
+            "The high-class and classy trend",
+            TextCleaner.clean("The high-cla.s.s and cla.s.sy trend"),
+        )
+        assertEquals("a class-room", TextCleaner.clean("a cla.s.s-room"))
         assertEquals("W.a.n.g Teng".let { TextCleaner.clean(it) }, "Wang Teng")
         assertEquals("“Wang’s house,” she said.", TextCleaner.clean("“W.a.n.g’s house,” she said."))
     }
@@ -374,6 +379,7 @@ class TextCleanerTest {
             "J.K. Rowling wrote it.",
             "Read it on empirenovel.com today.",
             "Visit www.novel.co.uk now.",
+            "Read on my-novel-site.com today.",
             "It cost 3.5 coins.",
             "He paused... then left.",
             "Mr. Smith and Dr.Who met.",
