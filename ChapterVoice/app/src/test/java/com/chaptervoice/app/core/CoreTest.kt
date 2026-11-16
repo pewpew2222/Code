@@ -204,3 +204,40 @@ class TextChunkerTest {
         assertEquals(text.split(Regex("\\s+")), chunks.flatMap { it.split(" ") })
     }
 }
+
+class HostBlocklistTest {
+
+    private val list = HostBlocklist.parse(
+        sequenceOf(
+            "# comment",
+            "127.0.0.1 localhost",
+            "0.0.0.0 0.0.0.0",
+            "0.0.0.0 doubleclick.net",
+            "0.0.0.0 ads.example.com # trailing comment",
+            "tracker.io",
+            "",
+        ),
+    )
+
+    @Test
+    fun parsesHostsFileAndPlainLines() {
+        assertEquals(3, list.size)
+    }
+
+    @Test
+    fun blocksDomainAndSubdomains() {
+        assertTrue(list.isBlocked("doubleclick.net"))
+        assertTrue(list.isBlocked("securepubads.g.doubleclick.net"))
+        assertTrue(list.isBlocked("ADS.Example.com."))
+        assertTrue(list.isBlocked("x.tracker.io"))
+    }
+
+    @Test
+    fun allowsEverythingElse() {
+        assertFalse(list.isBlocked("example.com"))
+        assertFalse(list.isBlocked("novelphoenix.com"))
+        assertFalse(list.isBlocked("notdoubleclick.net"))
+        assertFalse(list.isBlocked(null))
+        assertFalse(list.isBlocked("localhost"))
+    }
+}

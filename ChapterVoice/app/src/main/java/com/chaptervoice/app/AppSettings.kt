@@ -31,6 +31,10 @@ class AppSettings(context: Context) {
         get() = prefs.getInt("chapter_limit", 0)
         set(value) = prefs.edit().putInt("chapter_limit", value).apply()
 
+    var adBlock: Boolean
+        get() = prefs.getBoolean("ad_block", true)
+        set(value) = prefs.edit().putBoolean("ad_block", value).apply()
+
     var lastUrl: String
         get() = prefs.getString("last_url", null) ?: "https://www.google.com"
         set(value) = prefs.edit().putString("last_url", value).apply()

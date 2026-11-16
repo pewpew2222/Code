@@ -4,8 +4,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Message
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
@@ -64,6 +68,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chaptervoice.app.AdBlocker
 import com.chaptervoice.app.AppSettings
 import com.chaptervoice.app.R
 import com.chaptervoice.app.core.NextMode
@@ -92,6 +97,7 @@ fun ReaderScreen(
     val webView = remember {
         createWebView(
             context,
+            settings,
             onPageStarted = { url -> addressText = url },
             onPageFinished = { url, back ->
                 addressText = url
@@ -285,6 +291,7 @@ private fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDismi
     var autoContinue by remember { mutableStateOf(settings.autoContinue) }
     var readTitle by remember { mutableStateOf(settings.readTitle) }
     var limit by remember { mutableIntStateOf(settings.chapterLimit) }
+    var adBlock by remember { mutableStateOf(settings.adBlock) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -313,6 +320,9 @@ private fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDismi
                 }
                 SwitchRow(stringResource(R.string.setting_read_title), readTitle) {
                     readTitle = it; settings.readTitle = it
+                }
+                SwitchRow(stringResource(R.string.setting_ad_block, AdBlocker.domainCount), adBlock) {
+                    adBlock = it; settings.adBlock = it
                 }
 
                 Text(stringResource(R.string.setting_next_mode), Modifier.padding(top = 8.dp), fontWeight = FontWeight.SemiBold)
@@ -367,6 +377,7 @@ private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Un
 @SuppressLint("SetJavaScriptEnabled")
 private fun createWebView(
     context: Context,
+    appSettings: AppSettings,
     onPageStarted: (String) -> Unit,
     onPageFinished: (String, Boolean) -> Unit,
     onProgress: (Int) -> Unit,
@@ -377,17 +388,54 @@ private fun createWebView(
     settings.useWideViewPort = true
     settings.builtInZoomControls = true
     settings.displayZoomControls = false
+    settings.setSupportMultipleWindows(true)
+    settings.javaScriptCanOpenWindowsAutomatically = false
     CookieManager.getInstance().setAcceptCookie(true)
     CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
     webViewClient = object : WebViewClient() {
         override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) = onPageStarted(url)
+
+        override fun onPageCommitVisible(view: WebView, url: String) {
+            if (appSettings.adBlock) view.evaluateJavascript(AdBlocker.injectCssScript, null)
+        }
+
         override fun onPageFinished(view: WebView, url: String) {
+            if (appSettings.adBlock) view.evaluateJavascript(AdBlocker.injectCssScript, null)
             CookieManager.getInstance().flush()
             onPageFinished(url, view.canGoBack())
+        }
+
+        override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
+            if (appSettings.adBlock) AdBlocker.intercept(request) else null
+
+        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+            val target = request.url
+            // intent://, market:// and similar: almost always ads trying to open an app store.
+            if (target.scheme != "http" && target.scheme != "https") return true
+            if (!appSettings.adBlock) return false
+            val currentHost = view.url?.let { Uri.parse(it).host }
+            return target.host != currentHost && AdBlocker.isBlocked(target)
         }
     }
     webChromeClient = object : WebChromeClient() {
         override fun onProgressChanged(view: WebView, newProgress: Int) = onProgress(newProgress)
+
+        /**
+         * Pop-up windows are never opened. A link the user tapped that wants a new
+         * window (target="_blank") opens in the same view instead.
+         */
+        override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?): Boolean {
+            if (!isUserGesture) return false
+            val hit = view.hitTestResult
+            val link = hit.extra
+            if (link != null && (hit.type == WebView.HitTestResult.SRC_ANCHOR_TYPE ||
+                    hit.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE)
+            ) {
+                val uri = Uri.parse(link)
+                if (!(appSettings.adBlock && AdBlocker.isBlocked(uri))) view.loadUrl(link)
+            }
+            return false
+        }
     }
 }
 
