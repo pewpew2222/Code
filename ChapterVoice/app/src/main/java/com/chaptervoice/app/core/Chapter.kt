@@ -10,6 +10,8 @@ data class Chapter(
     val nextUrl: String?,
     /** The page's <title>, which usually names the book as well as the chapter. */
     val pageTitle: String = "",
+    /** The chapter heading to read aloud ("Chapter 3: ..."), or empty. */
+    val heading: String = title,
 ) {
     val textFingerprint: Int get() = paragraphs.joinToString("\n").hashCode()
 }
@@ -18,7 +20,15 @@ object ChapterParser {
     fun parse(doc: Document, url: String, mode: NextMode): Chapter {
         val nextUrl = NextChapterResolver.resolve(doc, url, mode)
         val extracted = ContentExtractor.extract(doc)
-        return Chapter(url, extracted.title, extracted.paragraphs, nextUrl, doc.title().trim())
+        val pageTitle = doc.title().trim()
+        return Chapter(
+            url = url,
+            title = extracted.title.ifBlank { pageTitle },
+            paragraphs = extracted.paragraphs,
+            nextUrl = nextUrl,
+            pageTitle = pageTitle,
+            heading = extracted.title,
+        )
     }
 
     fun parseHtml(html: String, url: String, mode: NextMode): Chapter =

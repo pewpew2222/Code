@@ -216,6 +216,44 @@ class ContentExtractorTest {
     }
 
     @Test
+    fun usesChapterHeadingNotBookNameAsTitle() {
+        // empirenovel: <h1> is the book's name, the chapter heading is the first line of the text.
+        val html = """
+            <h1>COMPLETE MARTIAL ARTS ATTRIBUTES</h1>
+            <div id="chapter-content">
+              <p>Chapter 3: Starting My Bugged Life Now!</p>
+              <p>6</p>
+              <p>Translator: Henyee Translations Editor: Henyee Translations</p>
+              <p>7 pm.</p>
+              $story
+            </div>
+        """.trimIndent()
+
+        val result = ContentExtractor.extract(Jsoup.parse(html, "https://empirenovel.com/c3"))
+
+        assertEquals("Chapter 3: Starting My Bugged Life Now!", result.title)
+        assertEquals("7 pm.", result.paragraphs.first())
+        assertTrue(result.paragraphs.none { it.contains("MARTIAL ARTS") })
+    }
+
+    @Test
+    fun prefersChapterHeadingElementAfterBookNameHeading() {
+        val html = """<h1>My Novel</h1><h2>Ch. 12 - The Duel</h2><div id="chapter-content">$story</div>"""
+        val chapter = ChapterParser.parseHtml(html, "https://s.com/c12", NextMode.AUTO)
+        assertEquals("Ch. 12 - The Duel", chapter.heading)
+        assertEquals("Ch. 12 - The Duel", chapter.title)
+    }
+
+    @Test
+    fun noHeadingMeansNothingExtraIsReadButPageTitleIsShown() {
+        val html = """<html><head><title>My Novel - Read Online</title></head><body><h1>My Novel</h1>
+            <div id="chapter-content">$story</div></body></html>"""
+        val chapter = ChapterParser.parseHtml(html, "https://s.com/x", NextMode.AUTO)
+        assertEquals("", chapter.heading)
+        assertEquals("My Novel - Read Online", chapter.title)
+    }
+
+    @Test
     fun keepsStoryLinesThatStartWithNavigationWords() {
         val html = """<div id="chapter-content">$story<p>Next, he opened the door.</p><p>Next</p></div>"""
         val result = ContentExtractor.extract(Jsoup.parse(html, "https://s.com/c1"))

@@ -295,7 +295,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
             BookmarkStore.get(this).advance(previous.url, loaded.url, loaded.pageTitle.ifBlank { loaded.title })
         }
         val text = buildList {
-            if (settings.readTitle && loaded.title.isNotBlank()) add(loaded.title)
+            if (settings.readTitle && loaded.heading.isNotBlank()) add(loaded.heading)
             addAll(loaded.paragraphs)
         }.map { TextCleaner.clean(it) }
         pieces = TextChunker.chunk(text, maxPieceLength())

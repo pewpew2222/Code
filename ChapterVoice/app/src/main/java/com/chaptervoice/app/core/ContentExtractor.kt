@@ -81,22 +81,25 @@ object ContentExtractor {
         SiteRule("novelphoenix.com", Regex("^share to your friends$", RegexOption.IGNORE_CASE)),
     )
 
+    /** [title] is the chapter heading ("Chapter 3: ..."), or empty if none was found. */
     data class Extracted(val title: String, val paragraphs: List<String>)
 
     fun extract(original: Document): Extracted {
         val doc = original.clone()
-        val title = findTitle(doc)
+        val headingOnPage = findHeading(doc)
 
-        val body = doc.body() ?: return Extracted(title, emptyList())
+        val body = doc.body() ?: return Extracted(headingOnPage.orEmpty(), emptyList())
         applySiteRules(body, doc.location())
         removeShareBoxes(body)
         JUNK_SELECTORS.forEach { selector -> runCatching { body.select(selector).remove() } }
 
         val container = findByKnownSelector(body) ?: findByScore(body) ?: body
-        val paragraphs = toParagraphs(container)
-            .filterNot { isJunkLine(it) }
-            .let { dropLeadingTitle(it, title) }
-            .let { dropCredits(it) }
+        val lines = toParagraphs(container).filterNot { isJunkLine(it) }
+        // Many sites put the chapter heading as the first line of the text instead.
+        val title = headingOnPage
+            ?: lines.take(HEADING_SCAN_LINES).firstOrNull { looksLikeChapterHeading(it) }
+            ?: ""
+        val paragraphs = dropLeadingTitle(lines, title).let { dropCredits(it) }
 
         return Extracted(title, paragraphs)
     }
@@ -142,16 +145,35 @@ object ContentExtractor {
         }
     }
 
-    private fun findTitle(doc: Document): String {
-        val candidates = listOf(
-            ".chapter-title", ".chr-title", "#chapter-title", ".chapter__title",
-            "h1", "h2", ".title",
-        )
-        for (selector in candidates) {
-            val text = doc.selectFirst(selector)?.text()?.trim().orEmpty()
-            if (text.isNotEmpty() && text.length < 200) return text
-        }
-        return doc.title().trim()
+    /**
+     * "Chapter 3: ...", "Ch. 12", "Episode 5", "Prologue", "第三章", "12. Title".
+     * Used to tell the chapter heading apart from the book's name, which many sites
+     * show in the first <h1>.
+     */
+    private val CHAPTER_HEADING = Regex(
+        "^(?:(?:chapter|chap|ch|episode|ep|prologue|epilogue|interlude|side story|afterword|kapitel|" +
+            "capítulo|capitulo|chapitre|глава)(?![\\p{L}])" +
+            "|第\\s*[0-9一二三四五六七八九十百千零〇两]+\\s*[章话話回节節]" +
+            "|\\d{1,5}\\s*[.:：\\-–—]\\s*\\S)",
+        RegexOption.IGNORE_CASE,
+    )
+    private const val HEADING_MAX_LENGTH = 150
+    private const val HEADING_SCAN_LINES = 3
+
+    private fun looksLikeChapterHeading(text: String): Boolean =
+        text.length <= HEADING_MAX_LENGTH && CHAPTER_HEADING.containsMatchIn(text.trim())
+
+    private const val CHAPTER_TITLE_CLASSES = ".chapter-title, .chr-title, #chapter-title, .chapter__title, .chapter-name"
+
+    /** The chapter heading on the page, or null (then the first lines of the text are checked). */
+    private fun findHeading(doc: Document): String? {
+        val candidates = doc.select("$CHAPTER_TITLE_CLASSES, h1, h2, h3, h4")
+            .map { it.text().trim() }
+            .filter { it.isNotEmpty() }
+        candidates.firstOrNull { looksLikeChapterHeading(it) }?.let { return it }
+        // An element the site itself calls the chapter title, even without "Chapter N".
+        return doc.select(CHAPTER_TITLE_CLASSES).map { it.text().trim() }
+            .firstOrNull { it.isNotEmpty() && it.length <= HEADING_MAX_LENGTH }
     }
 
     private fun findByKnownSelector(body: Element): Element? {
@@ -268,7 +290,8 @@ object ContentExtractor {
         }
 
     private fun dropLeadingTitle(paragraphs: List<String>, title: String): List<String> {
-        if (paragraphs.isEmpty() || title.isBlank()) return paragraphs
-        return if (paragraphs.first().equals(title, ignoreCase = true)) paragraphs.drop(1) else paragraphs
+        if (title.isBlank()) return paragraphs
+        val index = paragraphs.take(HEADING_SCAN_LINES).indexOfFirst { it.equals(title, ignoreCase = true) }
+        return if (index < 0) paragraphs else paragraphs.filterIndexed { i, _ -> i != index }
     }
 }
