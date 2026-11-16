@@ -145,6 +145,23 @@ class TabManager(private val context: Context, private val settings: AppSettings
 
     // ---------------------------------------------------------------- ad blocking
 
+    private fun onPopup(openerUrl: String?, target: String) {
+        if (!settings.adBlock) {
+            newTab(target)
+            return
+        }
+        val targetHost = Uri.parse(target).host
+        if (AdBlocker.isBlockedHost(targetHost)) return
+        if (!AdBlocker.sameSite(targetHost, Uri.parse(openerUrl ?: "").host)) return
+        newTab(target)
+    }
+
+    private fun injectAdScripts(view: WebView, url: String) {
+        if (!settings.adBlock) return
+        view.evaluateJavascript(AdBlocker.cssScript(url), null)
+        if (settings.removeOverlays) view.evaluateJavascript(AdBlocker.OVERLAY_SCRIPT, null)
+    }
+
     /** Re-applies the hiding CSS, e.g. after the user changed a rule. */
     fun applyAdCss(tab: BrowserTab) {
         if (settings.adBlock && tab.url.isNotEmpty()) tab.webView.evaluateJavascript(AdBlocker.cssScript(tab.url), null)
@@ -248,11 +265,11 @@ class TabManager(private val context: Context, private val settings: AppSettings
             }
 
             override fun onPageCommitVisible(view: WebView, url: String) {
-                if (this@TabManager.settings.adBlock) view.evaluateJavascript(AdBlocker.cssScript(url), null)
+                injectAdScripts(view, url)
             }
 
             override fun onPageFinished(view: WebView, url: String) {
-                if (this@TabManager.settings.adBlock) view.evaluateJavascript(AdBlocker.cssScript(url), null)
+                injectAdScripts(view, url)
                 CookieManager.getInstance().flush()
                 tab.url = url
                 tab.title = view.title.orEmpty()
@@ -296,21 +313,40 @@ class TabManager(private val context: Context, private val settings: AppSettings
             }
 
             /**
-             * Pop-ups are never opened. A link the user tapped that asks for a new
-             * window (target="_blank") opens in a new tab.
+             * A page asked for a new window. The real target is only known once the
+             * window starts loading, so a throw-away WebView catches it first. Pages on
+             * the same site open in a new tab; pop-ups to other sites (ads) are dropped.
              */
             override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?): Boolean {
-                if (!isUserGesture) return false
-                val hit = view.hitTestResult
-                val link = hit.extra ?: return false
-                val isLink = hit.type == WebView.HitTestResult.SRC_ANCHOR_TYPE ||
-                    hit.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE
-                if (isLink && link.startsWith("http") &&
-                    !(this@TabManager.settings.adBlock && AdBlocker.isBlocked(Uri.parse(link)))
-                ) {
-                    newTab(link)
+                if (!isUserGesture || resultMsg == null) return false
+                val openerUrl = view.url
+                val catcher = WebView(context)
+                catcher.webViewClient = object : WebViewClient() {
+                    private var handled = false
+
+                    private fun handle(url: String) {
+                        if (handled || !url.startsWith("http")) return
+                        handled = true
+                        onPopup(openerUrl, url)
+                        catcher.post { catcher.stopLoading(); catcher.destroy() }
+                    }
+
+                    override fun shouldOverrideUrlLoading(v: WebView, request: WebResourceRequest): Boolean {
+                        handle(request.url.toString())
+                        return true
+                    }
+
+                    override fun onPageStarted(v: WebView, url: String, favicon: Bitmap?) = handle(url)
+
+                    // Nothing is actually downloaded by the catcher.
+                    override fun shouldInterceptRequest(v: WebView, request: WebResourceRequest): WebResourceResponse =
+                        WebResourceResponse("text/plain", "utf-8", java.io.ByteArrayInputStream(ByteArray(0)))
                 }
-                return false
+                (resultMsg.obj as WebView.WebViewTransport).webView = catcher
+                resultMsg.sendToTarget()
+                // Pop-ups that never load anything are cleaned up after a while.
+                catcher.postDelayed({ runCatching { catcher.destroy() } }, 10_000)
+                return true
             }
         }
     }

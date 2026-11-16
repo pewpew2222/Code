@@ -47,6 +47,7 @@ internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDism
     var readTitle by remember { mutableStateOf(settings.readTitle) }
     var limit by remember { mutableIntStateOf(settings.chapterLimit) }
     var adBlock by remember { mutableStateOf(settings.adBlock) }
+    var removeOverlays by remember { mutableStateOf(settings.removeOverlays) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -78,6 +79,9 @@ internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDism
                 }
                 SwitchRow(stringResource(R.string.setting_ad_block, AdBlocker.domainCount), adBlock) {
                     adBlock = it; settings.adBlock = it
+                }
+                SwitchRow(stringResource(R.string.setting_remove_overlays), removeOverlays) {
+                    removeOverlays = it; settings.removeOverlays = it
                 }
 
                 Text(stringResource(R.string.setting_next_mode), Modifier.padding(top = 8.dp), fontWeight = FontWeight.SemiBold)

@@ -37,6 +37,10 @@ class AppSettings(context: Context) {
 
     fun lastUrlOrNull(): String? = prefs.getString("last_url", null)
 
+    var removeOverlays: Boolean
+        get() = prefs.getBoolean("remove_overlays", true)
+        set(value) = prefs.edit().putBoolean("remove_overlays", value).apply()
+
     var lastUrl: String
         get() = prefs.getString("last_url", null) ?: "https://www.google.com"
         set(value) = prefs.edit().putString("last_url", value).apply()

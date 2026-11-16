@@ -214,6 +214,85 @@ object AdBlocker {
         rulesVersion.intValue++
     }
 
+    /** Same site, ignoring subdomains: "www.site.com" and "cdn.site.com" match. */
+    fun sameSite(a: String?, b: String?): Boolean {
+        if (a.isNullOrEmpty() || b.isNullOrEmpty()) return false
+        return siteOf(a.lowercase()) == siteOf(b.lowercase())
+    }
+
+    /** Last two labels of a host, or three for hosts like "site.co.uk". */
+    private fun siteOf(host: String): String {
+        val labels = host.split('.')
+        if (labels.size <= 2) return host
+        val keep = if (labels[labels.size - 2].length <= 3 && labels.last().length == 2) 3 else 2
+        return labels.takeLast(keep).joinToString(".")
+    }
+
+    /**
+     * Removes floating ad boxes (video pop-overs, "in-page push" notifications) that ad
+     * scripts add on top of the page. These networks change domain names constantly, so
+     * they are recognised by how they behave instead:
+     * - added after the page itself has loaded,
+     * - fixed on screen above the content (high z-index),
+     * - showing an image, video or iframe (or hidden in a closed shadow root),
+     * - with no links back to the site itself (the site's own menus and headers have those).
+     */
+    const val OVERLAY_SCRIPT = """
+        (function(){
+          if (window.__cvOverlay) return;
+          window.__cvOverlay = true;
+          var ready = document.readyState !== 'loading';
+          if (!ready) document.addEventListener('DOMContentLoaded', function(){ ready = true; });
+          function ownLink(el){
+            var links = el.querySelectorAll('a[href]');
+            for (var i = 0; i < links.length; i++) {
+              try { if (new URL(links[i].href).host === location.host) return true; } catch (x) {}
+            }
+            return false;
+          }
+          function isAd(el){
+            if (!(el instanceof HTMLElement) || el.id === 'cv-mark') return false;
+            var cs = getComputedStyle(el);
+            if (cs.position !== 'fixed' && cs.position !== 'sticky') return false;
+            if ((parseInt(cs.zIndex, 10) || 0) < 100) return false;
+            var media = el.tagName === 'IFRAME' || el.querySelector('iframe,video,img,picture,canvas');
+            var closedShadow = el.children.length === 0 && !el.textContent.trim() &&
+              el.getBoundingClientRect().height > 30;
+            if (!media && !el.shadowRoot && !closedShadow) return false;
+            return !ownLink(el);
+          }
+          function check(el){
+            // The floating box is often wrapped in a plain container, so look two levels down too.
+            var candidates = [el];
+            for (var i = 0; i < el.children.length && i < 10; i++) {
+              candidates.push(el.children[i]);
+              for (var j = 0; j < el.children[i].children.length && j < 10; j++) {
+                candidates.push(el.children[i].children[j]);
+              }
+            }
+            candidates.forEach(function(c){
+              if (isAd(c)) c.style.setProperty('display', 'none', 'important');
+            });
+          }
+          function watch(el){
+            check(el);
+            setTimeout(function(){ check(el); }, 400);
+            setTimeout(function(){ check(el); }, 1500);
+          }
+          new MutationObserver(function(mutations){
+            if (!ready) return;
+            mutations.forEach(function(m){
+              m.addedNodes.forEach(function(n){
+                if (n.nodeType !== 1) return;
+                var p = n.parentNode;
+                if (p === document.body || p === document.documentElement) watch(n);
+                else if (p && p.parentNode === document.body && p.children.length === 1) watch(p);
+              });
+            });
+          }).observe(document.documentElement, { childList: true, subtree: true });
+        })();
+    """
+
     fun hostOf(url: String?): String =
         runCatching { Uri.parse(url).host.orEmpty().lowercase().removePrefix("www.") }.getOrDefault("")
 }

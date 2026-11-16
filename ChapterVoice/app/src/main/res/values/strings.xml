@@ -92,5 +92,6 @@
     <string name="setting_limit_off">Insomningsstopp: av</string>
     <string name="setting_limit">Stoppa efter %1$d kapitel</string>
     <string name="setting_ad_block">Blockera reklam (%1$d domäner)</string>
+    <string name="setting_remove_overlays">Ta bort flytande reklamrutor (video, popup-notiser)</string>
     <string name="setting_open_tts">Röst och språk (systemets TTS-inställningar)</string>
 </resources>
