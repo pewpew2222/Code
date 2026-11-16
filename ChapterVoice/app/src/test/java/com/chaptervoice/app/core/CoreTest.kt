@@ -183,6 +183,8 @@ class ContentExtractorTest {
     fun dropsTranslatorAndEditorCredits() {
         val html = """
             <div id="chapter-content">
+              <p>6</p>
+              <p>12 Comments</p>
               <p>Translator: Henyee Translations Editor: Henyee Translations</p>
               <p>TL: Someone</p>
               <p>Translated by Atlas Studios</p>
@@ -200,6 +202,7 @@ class ContentExtractorTest {
         assertEquals("7 pm.", result.paragraphs.first())
         assertTrue(result.paragraphs.none { it.startsWith("Translator") || it.startsWith("TL:") || it.startsWith("Translated by") })
         assertTrue(result.paragraphs.none { it.contains("翻译") || it.startsWith("Proofreader") })
+        assertTrue(result.paragraphs.none { it == "6" || it == "12 Comments" })
         // The same words in the middle of the story are kept.
         assertTrue(result.paragraphs.any { it.startsWith("Editor: he said") })
     }

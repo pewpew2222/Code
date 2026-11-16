@@ -256,10 +256,15 @@ object ContentExtractor {
     private const val CREDIT_SCAN_END = 4
     private const val CREDIT_MAX_LENGTH = 160
 
+    /** A lone number such as a comment counter next to the title ("6", "12 comments"). */
+    private val COUNTER_LINE = Regex("^[\\d.,]{1,7}( (comments?|kommentarer|views?|likes?))?$", RegexOption.IGNORE_CASE)
+
     private fun dropCredits(paragraphs: List<String>): List<String> =
         paragraphs.filterIndexed { index, line ->
             val nearEdge = index < CREDIT_SCAN_START || index >= paragraphs.size - CREDIT_SCAN_END
-            !(nearEdge && line.length <= CREDIT_MAX_LENGTH && CREDIT_LINE.containsMatchIn(line))
+            val junk = (line.length <= CREDIT_MAX_LENGTH && CREDIT_LINE.containsMatchIn(line)) ||
+                COUNTER_LINE.matches(line.trim())
+            !(nearEdge && junk)
         }
 
     private fun dropLeadingTitle(paragraphs: List<String>, title: String): List<String> {
