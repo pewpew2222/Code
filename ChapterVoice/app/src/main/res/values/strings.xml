@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ChapterVoice</string>
+    <string name="channel_name">Uppläsning</string>
+
+    <string name="address_hint">Adress eller sökning</string>
+    <string name="settings">Inställningar</string>
+    <string name="done">Klar</string>
+    <string name="read_this_page">Läs upp den här sidan</string>
+    <string name="read_this_page_instead">Läs upp sidan som visas i stället</string>
+
+    <string name="action_play">Spela</string>
+    <string name="action_pause">Pausa</string>
+    <string name="action_prev_paragraph">Föregående stycke</string>
+    <string name="action_next_paragraph">Nästa stycke</string>
+    <string name="action_next_chapter">Nästa kapitel</string>
+    <string name="action_stop">Stoppa</string>
+
+    <string name="status_loading">Hämtar kapitel…</string>
+    <string name="status_position">Stycke %1$d av %2$d</string>
+    <string name="status_chapters_read">%1$d kapitel lästa</string>
+
+    <string name="message_chapter_done">Kapitlet är slut.</string>
+    <string name="message_no_next_found">Hittade inget nästa kapitel.</string>
+    <string name="message_no_more_chapters">Det verkar inte finnas fler kapitel.</string>
+    <string name="message_limit_reached">Stoppade efter %1$d kapitel.</string>
+
+    <string name="error_tts_init">Talsyntesen kunde inte starta. Kontrollera att en TTS-motor är installerad.</string>
+    <string name="error_no_text">Hittade ingen text att läsa på sidan.</string>
+    <string name="error_http">Sidan svarade med fel %1$d (finns kapitlet?).</string>
+    <string name="error_offline">Ingen internetanslutning.</string>
+    <string name="error_timeout">Sidan svarade inte i tid.</string>
+    <string name="error_generic">Kunde inte läsa sidan: %1$s</string>
+
+    <string name="setting_rate">Hastighet: %1$.1f×</string>
+    <string name="setting_pitch">Tonhöjd: %1$.1f</string>
+    <string name="setting_auto_continue">Fortsätt automatiskt till nästa kapitel</string>
+    <string name="setting_read_title">Läs upp kapitelrubriken</string>
+    <string name="setting_next_mode">Hitta nästa kapitel via</string>
+    <string name="mode_auto">Länken \"Nästa\", annars ändra numret i adressen</string>
+    <string name="mode_link">Bara länken \"Nästa\"</string>
+    <string name="mode_url">Bara ändra numret i adressen (+1)</string>
+    <string name="setting_limit_off">Insomningsstopp: av</string>
+    <string name="setting_limit">Stoppa efter %1$d kapitel</string>
+    <string name="setting_open_tts">Röst och språk (systemets TTS-inställningar)</string>
+</resources>
