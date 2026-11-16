@@ -3,8 +3,8 @@ package com.chaptervoice.app.core
 /**
  * Makes text easier for TTS to read.
  *
- * Some sites "censor" words by putting dots inside them ("sh.i.p.s", "succ.u.m.b",
- * "w.a.n.g", "pa.s.sed"), which TTS reads as pauses or single letters. Those dots are
+ * Some sites "censor" words by putting dots or "+" inside them ("sh.i.p.s", "succ.u.m.b",
+ * "w.a.n.g", "pa.s.sed", "shi.+vered"), which TTS reads as pauses or single letters. Those dots are
  * removed, while abbreviations ("a.m.", "e.g.", "U.S.A."), initials ("J.K."),
  * web addresses and decimals are left alone. Words censored in capitals ("S.H.I.T")
  * are joined only when the [dictionary] knows them as a word and not as an acronym.
@@ -37,7 +37,7 @@ object TextCleaner {
      * Letters and dots with no spaces, optionally ending in a dot. Hyphens may sit on
      * either side, so each part of "high-cla.s.s" is checked on its own.
      */
-    private val DOTTED = Regex("(?<![\\p{L}\\p{N}.@/_])(\\p{L}+(?:\\.\\p{L}+)+)(\\.?)(?![\\p{L}\\p{N}@/_])")
+    private val DOTTED = Regex("(?<![\\p{L}\\p{N}.@/_+])(\\p{L}+(?:(?:\\.\\+?|\\+)\\p{L}+)+)(\\.?)(?![\\p{L}\\p{N}@/_+])")
 
     private val ABBREVIATIONS = setOf(
         "a.m", "p.m", "e.g", "i.e", "a.k.a", "r.i.p", "u.s", "u.k", "u.s.a", "n.b", "p.s", "q.e.d",
@@ -53,10 +53,12 @@ object TextCleaner {
     fun clean(text: String): String = DOTTED.replace(text) { match ->
         val word = match.groupValues[1]
         val trailingDot = match.groupValues[2]
-        if (isCensored(word)) word.replace(".", "") + trailingDot else match.value
+        if (isCensored(word)) word.replace(".", "").replace("+", "") + trailingDot else match.value
     }
 
     private fun isCensored(word: String): Boolean {
+        // A "+" between letters ("shi.+vered", "sh+it") is never normal spelling.
+        if ('+' in word) return true
         val parts = word.split('.')
         if (word.lowercase() in ABBREVIATIONS) return false
         // Censoring always leaves at least one single letter between dots.

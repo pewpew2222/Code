@@ -366,6 +366,8 @@ class TextCleanerTest {
             TextCleaner.clean("The high-cla.s.s and cla.s.sy trend"),
         )
         assertEquals("a class-room", TextCleaner.clean("a cla.s.s-room"))
+        assertEquals("wang Teng shivered.", TextCleaner.clean("wang Teng shi.+vered."))
+        assertEquals("What the shit", TextCleaner.clean("What the sh+it"))
         assertEquals("W.a.n.g Teng".let { TextCleaner.clean(it) }, "Wang Teng")
         assertEquals("“Wang’s house,” she said.", TextCleaner.clean("“W.a.n.g’s house,” she said."))
     }
@@ -381,6 +383,7 @@ class TextCleanerTest {
             "Visit www.novel.co.uk now.",
             "Read on my-novel-site.com today.",
             "It cost 3.5 coins.",
+            "He learned C++ and 2+2 math.",
             "He paused... then left.",
             "Mr. Smith and Dr.Who met.",
             "Wait.What?",
