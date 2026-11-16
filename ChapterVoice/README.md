@@ -15,6 +15,8 @@ vidare till nästa kapitel. Gjord för webbnoveller.
 - Stoppar när kapitlet inte finns (t.ex. HTTP 404) eller när sidan skickar tillbaka till samma sida.
 - Spelar i bakgrunden med skärmen avstängd (förgrundstjänst), med kontroller i notisen,
   på låsskärmen och via hörlurarnas knappar. Pausar när hörlurarna kopplas ur eller när ett samtal kommer.
+- Tar bort "censurpunkter" i ord före uppläsning ("sh.i.p.s" → "ships"). Ord censurerade med
+  versaler ("S.H.I.T") slås upp i en ordlista så att akronymer som "F.B.I" lämnas orörda.
 - Inställningar: hastighet, tonhöjd, läsa upp rubriken, insomningsstopp efter N kapitel,
   genväg till systemets röst- och språkval.
 - **Reklamblockering** i webbläsaren: anrop till cirka 76 000 kända reklam- och spårningsdomäner
@@ -56,3 +58,7 @@ Du kan också öppna mappen `ChapterVoice` i Android Studio.
 
 Reklamlistan (`app/src/main/assets/blocklist_hosts.txt`) kommer från
 [StevenBlack/hosts](https://github.com/StevenBlack/hosts) (MIT-licens).
+
+Ordlistan (`app/src/main/assets/words_en.txt`, `acronyms_en.txt`) bygger på den engelska
+Hunspell-ordboken från [LibreOffice](https://github.com/LibreOffice/dictionaries), som i sin tur
+kommer från [SCOWL](http://wordlist.aspell.net/) (fri licens, se SCOWL:s copyright).

@@ -124,6 +124,16 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ChapterVoice:reader")
             .apply { setReferenceCounted(false) }
 
+        if (TextCleaner.dictionary == null) {
+            scope.launch(Dispatchers.IO) {
+                TextCleaner.dictionary = runCatching {
+                    val words = assets.open("words_en.txt").bufferedReader().useLines { it.toList() }
+                    val acronyms = assets.open("acronyms_en.txt").bufferedReader().useLines { it.toList() }
+                    TextCleaner.Dictionary.load(words.asSequence(), acronyms.asSequence())
+                }.getOrNull()
+            }
+        }
+
         createChannel()
         mediaSession = MediaSessionCompat(this, "ChapterVoice").apply {
             setCallback(object : MediaSessionCompat.Callback() {

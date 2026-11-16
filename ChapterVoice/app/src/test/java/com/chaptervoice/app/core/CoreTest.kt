@@ -280,6 +280,36 @@ class HostBlocklistTest {
 
 class TextCleanerTest {
 
+    @org.junit.Before
+    fun setUp() {
+        TextCleaner.dictionary = TextCleaner.Dictionary(
+            words = setOf("shit", "damn", "ass", "pow"),
+            acronyms = setOf("fbi", "pow", "usa", "cia"),
+        )
+    }
+
+    @org.junit.After
+    fun tearDown() {
+        TextCleaner.dictionary = null
+    }
+
+    @Test
+    fun joinsCapitalCensoredWordsOnlyWhenTheyAreRealWords() {
+        assertEquals("What the SHIT!", TextCleaner.clean("What the S.H.I.T!"))
+        assertEquals("DAMN.", TextCleaner.clean("D.A.M.N."))
+        assertEquals("The F.B.I came.", TextCleaner.clean("The F.B.I came."))
+        assertEquals("A P.O.W camp.", TextCleaner.clean("A P.O.W camp."))
+        assertEquals("The C.I.A. knew.", TextCleaner.clean("The C.I.A. knew."))
+        // Unknown words in capitals stay as they are.
+        assertEquals("X.Y.Z", TextCleaner.clean("X.Y.Z"))
+    }
+
+    @Test
+    fun withoutDictionaryCapitalsAreLeftAlone() {
+        TextCleaner.dictionary = null
+        assertEquals("S.H.I.T", TextCleaner.clean("S.H.I.T"))
+    }
+
     @Test
     fun removesCensorDotsInsideWords() {
         assertEquals("The ships could succumb.", TextCleaner.clean("The sh.i.p.s could succ.u.m.b."))
