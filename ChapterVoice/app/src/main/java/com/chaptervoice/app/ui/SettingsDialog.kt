@@ -72,16 +72,20 @@ internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDism
                     valueRange = 0.5f..2f,
                 )
                 PauseSlider(
-                    label = { stringResource(R.string.setting_paragraph_pause, it / 1000f) },
+                    label = { stringResource(R.string.setting_paragraph_pause, it) },
                     initial = settings.paragraphPauseMs,
+                    maxMs = 2000,
+                    stepMs = 50,
                     onDone = { settings.paragraphPauseMs = it; onChanged() },
                 )
                 PauseSlider(
                     label = {
                         if (it == 0) stringResource(R.string.setting_sentence_pause_off)
-                        else stringResource(R.string.setting_sentence_pause, it / 1000f)
+                        else stringResource(R.string.setting_sentence_pause, it)
                     },
                     initial = settings.sentencePauseMs,
+                    maxMs = 300,
+                    stepMs = 10,
                     onDone = { settings.sentencePauseMs = it; onChanged() },
                 )
                 VoiceSettings(settings, onChanged)
@@ -170,16 +174,16 @@ private fun openTtsSettings(context: Context) {
     runCatching { context.startActivity(intent) }
 }
 
-/** A 0–2 second pause slider in steps of 0.1 s. */
+/** A pause slider from 0 to [maxMs] milliseconds in steps of [stepMs]. */
 @Composable
-private fun PauseSlider(label: @Composable (Int) -> String, initial: Int, onDone: (Int) -> Unit) {
-    var value by remember { mutableIntStateOf(initial) }
+private fun PauseSlider(label: @Composable (Int) -> String, initial: Int, maxMs: Int, stepMs: Int, onDone: (Int) -> Unit) {
+    var value by remember { mutableIntStateOf(initial.coerceIn(0, maxMs)) }
     Text(label(value))
     Slider(
         value = value.toFloat(),
-        onValueChange = { value = ((it / 100).roundToInt() * 100) },
+        onValueChange = { value = (it / stepMs).roundToInt() * stepMs },
         onValueChangeFinished = { onDone(value) },
-        valueRange = 0f..2000f,
-        steps = 19,
+        valueRange = 0f..maxMs.toFloat(),
+        steps = maxMs / stepMs - 1,
     )
 }

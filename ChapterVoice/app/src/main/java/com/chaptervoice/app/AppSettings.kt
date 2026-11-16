@@ -44,7 +44,7 @@ class AppSettings(context: Context) {
 
     /** Extra silence between sentences, in milliseconds (0 = only the voice's own pause). */
     var sentencePauseMs: Int
-        get() = prefs.getInt("sentence_pause_ms", 0)
+        get() = prefs.getInt("sentence_pause_ms", 0).coerceIn(0, 300)
         set(value) = prefs.edit().putInt("sentence_pause_ms", value).apply()
 
     /** Chapters to keep downloaded ahead while reading (0 = off). */
