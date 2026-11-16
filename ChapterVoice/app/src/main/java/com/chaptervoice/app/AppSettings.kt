@@ -37,6 +37,16 @@ class AppSettings(context: Context) {
 
     fun lastUrlOrNull(): String? = prefs.getString("last_url", null)
 
+    /** Silence after each paragraph, in milliseconds. */
+    var paragraphPauseMs: Int
+        get() = prefs.getInt("paragraph_pause_ms", 500)
+        set(value) = prefs.edit().putInt("paragraph_pause_ms", value).apply()
+
+    /** Extra silence between sentences, in milliseconds (0 = only the voice's own pause). */
+    var sentencePauseMs: Int
+        get() = prefs.getInt("sentence_pause_ms", 0)
+        set(value) = prefs.edit().putInt("sentence_pause_ms", value).apply()
+
     /** Chapters to keep downloaded ahead while reading (0 = off). */
     var preloadCount: Int
         get() = prefs.getInt("preload_count", 3)

@@ -114,6 +114,9 @@
     <string name="downloads_finished">Senaste nedladdningen: %1$d av %2$d kapitel klara.</string>
     <string name="downloads_finished_error">Senaste nedladdningen stannade efter %1$d kapitel: %2$s</string>
     <string name="delete">Ta bort</string>
+    <string name="setting_paragraph_pause">Paus mellan stycken: %1$.1f s</string>
+    <string name="setting_sentence_pause">Extra paus mellan meningar: %1$.1f s</string>
+    <string name="setting_sentence_pause_off">Extra paus mellan meningar: av (rösten bestämmer)</string>
     <string name="setting_language">Språk för uppläsning</string>
     <string name="language_auto">Automatiskt (efter sidans språk)</string>
     <string name="setting_voice">Röst för %1$s</string>

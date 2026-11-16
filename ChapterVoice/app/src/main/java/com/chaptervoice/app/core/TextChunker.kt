@@ -8,6 +8,27 @@ package com.chaptervoice.app.core
 object TextChunker {
     private val SENTENCE_END = Regex("(?<=[.!?。！？…\"”])\\s+")
 
+    /** Words that end with a dot without ending the sentence. */
+    private val ABBREVIATION_END = Regex(
+        "(?:^|\\s)(?:mr|mrs|ms|dr|st|sr|jr|prof|sgt|capt|lt|col|gen|vs|etc|no|vol|ch|e\\.g|i\\.e|a\\.m|p\\.m)\\.$",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /** Splits text into sentences, keeping "Mr. Smith" and "7 a.m. today" together. */
+    fun sentences(text: String): List<String> {
+        val result = mutableListOf<String>()
+        for (part in text.split(SENTENCE_END)) {
+            if (part.isBlank()) continue
+            val last = result.lastOrNull()
+            if (last != null && (ABBREVIATION_END.containsMatchIn(last) || part.first().isLowerCase())) {
+                result[result.lastIndex] = "$last $part"
+            } else {
+                result += part
+            }
+        }
+        return result
+    }
+
     fun chunk(paragraphs: List<String>, maxLength: Int): List<String> =
         paragraphs.flatMap { split(it, maxLength) }
 

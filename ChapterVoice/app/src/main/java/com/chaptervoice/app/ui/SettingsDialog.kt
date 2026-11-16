@@ -71,6 +71,19 @@ internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDism
                     onValueChangeFinished = { settings.pitch = pitch; onChanged() },
                     valueRange = 0.5f..2f,
                 )
+                PauseSlider(
+                    label = { stringResource(R.string.setting_paragraph_pause, it / 1000f) },
+                    initial = settings.paragraphPauseMs,
+                    onDone = { settings.paragraphPauseMs = it; onChanged() },
+                )
+                PauseSlider(
+                    label = {
+                        if (it == 0) stringResource(R.string.setting_sentence_pause_off)
+                        else stringResource(R.string.setting_sentence_pause, it / 1000f)
+                    },
+                    initial = settings.sentencePauseMs,
+                    onDone = { settings.sentencePauseMs = it; onChanged() },
+                )
                 VoiceSettings(settings, onChanged)
 
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
@@ -155,4 +168,18 @@ private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Un
 private fun openTtsSettings(context: Context) {
     val intent = Intent("com.android.settings.TTS_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     runCatching { context.startActivity(intent) }
+}
+
+/** A 0–2 second pause slider in steps of 0.1 s. */
+@Composable
+private fun PauseSlider(label: @Composable (Int) -> String, initial: Int, onDone: (Int) -> Unit) {
+    var value by remember { mutableIntStateOf(initial) }
+    Text(label(value))
+    Slider(
+        value = value.toFloat(),
+        onValueChange = { value = ((it / 100).roundToInt() * 100) },
+        onValueChangeFinished = { onDone(value) },
+        valueRange = 0f..2000f,
+        steps = 19,
+    )
 }

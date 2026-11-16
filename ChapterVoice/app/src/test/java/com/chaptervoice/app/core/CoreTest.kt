@@ -265,6 +265,14 @@ class ContentExtractorTest {
 class TextChunkerTest {
 
     @Test
+    fun splitsSentencesButKeepsAbbreviationsTogether() {
+        assertEquals(
+            listOf("Mr. Smith arrived at 7 a.m. today.", "\"Hello!\" he said.", "Was it late?", "Yes."),
+            TextChunker.sentences("Mr. Smith arrived at 7 a.m. today. \"Hello!\" he said. Was it late? Yes."),
+        )
+    }
+
+    @Test
     fun keepsShortParagraphsWhole() {
         assertEquals(listOf("a b", "c"), TextChunker.chunk(listOf("a b", "c"), 100))
     }

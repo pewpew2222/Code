@@ -349,20 +349,43 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         publishState(ReaderStatus.PAUSED)
     }
 
+    /** Id of the last utterance of the chapter; when it is done, the chapter is done. */
+    private var lastUtteranceId: String? = null
+
+    /**
+     * Queues the chapter from piece [start]. Each piece is spoken as its own utterance,
+     * or sentence by sentence when a sentence pause is set, with silence in between
+     * as configured. Utterance ids are "generation:piece:sentence".
+     */
     private fun speakFrom(start: Int) {
         generation++
         index = start.coerceIn(0, pieces.lastIndex)
         val params = Bundle()
+        val paragraphPause = settings.paragraphPauseMs.toLong()
+        val sentencePause = settings.sentencePauseMs.toLong()
+        var first = true
         for (i in index..pieces.lastIndex) {
-            val mode = if (i == index) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-            tts.speak(pieces[i], mode, params, "$generation:$i")
+            val parts = if (sentencePause > 0) TextChunker.sentences(pieces[i]).ifEmpty { listOf(pieces[i]) } else listOf(pieces[i])
+            parts.forEachIndexed { k, part ->
+                val id = "$generation:$i:$k"
+                tts.speak(part, if (first) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, params, id)
+                first = false
+                lastUtteranceId = id
+                if (k < parts.lastIndex) {
+                    tts.playSilentUtterance(sentencePause, TextToSpeech.QUEUE_ADD, "pause")
+                }
+            }
+            if (i < pieces.lastIndex && paragraphPause > 0) {
+                tts.playSilentUtterance(paragraphPause, TextToSpeech.QUEUE_ADD, "pause")
+            }
         }
         publishState(ReaderStatus.PLAYING)
     }
 
+    /** The piece index from an utterance id of the current generation, or null. */
     private fun parseId(id: String): Int? {
-        val (gen, i) = id.split(':').takeIf { it.size == 2 } ?: return null
-        return if (gen.toIntOrNull() == generation) i.toIntOrNull() else null
+        val parts = id.split(':').takeIf { it.size == 3 } ?: return null
+        return if (parts[0].toIntOrNull() == generation) parts[1].toIntOrNull() else null
     }
 
     private fun onPieceStarted(id: String) {
@@ -372,8 +395,8 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
     }
 
     private fun onPieceDone(id: String) {
-        val i = parseId(id) ?: return
-        if (playing && i == pieces.lastIndex) onChapterFinished()
+        parseId(id) ?: return
+        if (playing && id == lastUtteranceId) onChapterFinished()
     }
 
     private fun onChapterFinished() {
