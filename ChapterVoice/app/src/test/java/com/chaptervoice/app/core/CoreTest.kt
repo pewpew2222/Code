@@ -373,6 +373,28 @@ class TextCleanerTest {
     }
 
     @Test
+    fun fixesSubstitutedCharacters() {
+        assertEquals("hello there", TextCleaner.clean("h£llo th€re"))
+        assertEquals("What the shit, I will kill you", TextCleaner.clean("What the sh!t, I will k!ll you"))
+        assertEquals("a secret kill", TextCleaner.clean("a sεcrεt κill"))
+        assertEquals("a kill", TextCleaner.clean("a ќill"))
+        assertEquals("kill Li Xiao", TextCleaner.clean("ǩill Lǐ Xiǎo", "en"))
+        assertEquals("ķill", TextCleaner.clean("ķill", null)) // accents only removed for English
+    }
+
+    @Test
+    fun leavesRealSymbolsAndOtherScriptsAlone() {
+        val untouched = listOf(
+            "It cost £5 or €10.",
+            "Wow!Amazing, she said.",
+            "Wow! amazing.",
+            "Он вошёл в комнату.",
+            "Η αγάπη είναι.",
+        )
+        untouched.forEach { assertEquals(it, TextCleaner.clean(it)) }
+    }
+
+        @Test
     fun keepsAbbreviationsInitialsAddressesAndNumbers() {
         val untouched = listOf(
             "It was 7 a.m. and he left.",

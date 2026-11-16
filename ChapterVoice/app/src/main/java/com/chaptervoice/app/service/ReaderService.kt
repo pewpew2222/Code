@@ -310,7 +310,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         val text = buildList {
             if (settings.readTitle && loaded.heading.isNotBlank()) add(loaded.heading)
             addAll(loaded.paragraphs)
-        }.map { TextCleaner.clean(it) }
+        }.map { TextCleaner.clean(it, loaded.language) }
         pieces = TextChunker.chunk(text, maxPieceLength())
         index = 0
         mediaSession.setMetadata(
