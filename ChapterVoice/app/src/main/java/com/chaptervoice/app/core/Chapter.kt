@@ -12,6 +12,8 @@ data class Chapter(
     val pageTitle: String = "",
     /** The chapter heading to read aloud ("Chapter 3: ..."), or empty. */
     val heading: String = title,
+    /** Language tag of the text ("en", "zh", ...), or null if unknown. */
+    val language: String? = null,
 ) {
     val textFingerprint: Int get() = paragraphs.joinToString("\n").hashCode()
 }
@@ -28,6 +30,7 @@ object ChapterParser {
             nextUrl = nextUrl,
             pageTitle = pageTitle,
             heading = extracted.title,
+            language = LanguageDetector.detect(doc.selectFirst("html")?.attr("lang"), extracted.paragraphs),
         )
     }
 

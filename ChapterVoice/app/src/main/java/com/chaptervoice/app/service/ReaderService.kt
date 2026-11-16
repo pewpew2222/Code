@@ -52,6 +52,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jsoup.HttpStatusException
 import java.net.URI
+import java.util.Locale
 
 /**
  * Reads chapters aloud in the foreground and moves on to the next chapter by itself.
@@ -71,6 +72,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         const val ACTION_SETTINGS_CHANGED = "com.chaptervoice.SETTINGS_CHANGED"
         const val ACTION_STOP = "com.chaptervoice.STOP"
         const val EXTRA_URL = "url"
+        private const val DEFAULT_LANGUAGE = "en"
 
         private const val CHANNEL_ID = "reader"
         private const val NOTIFICATION_ID = 1
@@ -300,6 +302,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
     private fun start(loaded: Chapter) {
         val previous = chapter
         chapter = loaded
+        applyLanguage(loaded)
         if (previous != null && previous.url != loaded.url) {
             // A bookmark on the previous chapter moves along to this one.
             BookmarkStore.get(this).advance(previous.url, loaded.url, loaded.pageTitle.ifBlank { loaded.title })
@@ -422,12 +425,36 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
     private fun onSettingsChanged() {
         if (!ttsReady) return
         applyVoiceSettings()
+        applyLanguage(chapter)
         if (playing) speakFrom(index)
     }
 
     private fun applyVoiceSettings() {
         tts.setSpeechRate(settings.speechRate)
         tts.setPitch(settings.pitch)
+    }
+
+    /** Shown in the player when no voice is installed for the chapter's language. */
+    private var voiceWarning: String? = null
+
+    /**
+     * Picks the TTS language (the chosen one, or the chapter's own) and the chosen voice.
+     * Without this, the engine speaks in its own default language, whatever the text is.
+     */
+    private fun applyLanguage(loaded: Chapter?) {
+        val chosen = settings.ttsLanguage
+        val tag = if (chosen == "auto") loaded?.language ?: DEFAULT_LANGUAGE else chosen
+        val locale = Locale.forLanguageTag(tag)
+        val result = tts.setLanguage(locale)
+        voiceWarning = if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            getString(R.string.error_voice_missing, locale.getDisplayLanguage(Locale.getDefault()))
+        } else {
+            null
+        }
+        val voiceName = settings.ttsVoice(locale.language)
+        if (voiceName.isNotEmpty()) {
+            runCatching { tts.voices?.firstOrNull { it.name == voiceName } }.getOrNull()?.let { tts.voice = it }
+        }
     }
 
     /** Stops after the current chapter but keeps the notification so the user can continue. */
@@ -479,6 +506,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
             it.copy(
                 status = status,
                 chapterUrl = current?.url ?: it.chapterUrl,
+                warning = voiceWarning,
                 chapterTitle = current?.title,
                 position = if (pieces.isEmpty()) 0 else index + 1,
                 total = pieces.size,

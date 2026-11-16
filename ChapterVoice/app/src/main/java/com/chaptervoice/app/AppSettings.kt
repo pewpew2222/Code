@@ -46,6 +46,15 @@ class AppSettings(context: Context) {
         get() = prefs.getBoolean("delete_after_read", true)
         set(value) = prefs.edit().putBoolean("delete_after_read", value).apply()
 
+    /** "auto" (from the page) or a language tag like "en". */
+    var ttsLanguage: String
+        get() = prefs.getString("tts_language", "auto") ?: "auto"
+        set(value) = prefs.edit().putString("tts_language", value).apply()
+
+    /** Chosen voice per language ("" = the engine's default voice for it). */
+    fun ttsVoice(language: String): String = prefs.getString("tts_voice_$language", "") ?: ""
+    fun setTtsVoice(language: String, voice: String) = prefs.edit().putString("tts_voice_$language", voice).apply()
+
     var removeOverlays: Boolean
         get() = prefs.getBoolean("remove_overlays", true)
         set(value) = prefs.edit().putBoolean("remove_overlays", value).apply()

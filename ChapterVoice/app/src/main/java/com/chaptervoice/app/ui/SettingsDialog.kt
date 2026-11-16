@@ -71,6 +71,7 @@ internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDism
                     onValueChangeFinished = { settings.pitch = pitch; onChanged() },
                     valueRange = 0.5f..2f,
                 )
+                VoiceSettings(settings, onChanged)
 
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
                 SwitchRow(stringResource(R.string.setting_auto_continue), autoContinue) {

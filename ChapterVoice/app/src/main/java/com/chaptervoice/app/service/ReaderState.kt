@@ -15,6 +15,8 @@ data class ReaderUiState(
     val total: Int = 0,
     val currentText: String = "",
     val message: String? = null,
+    /** A problem that does not stop reading, e.g. a missing voice. */
+    val warning: String? = null,
     val chaptersRead: Int = 0,
 )
 

@@ -374,3 +374,20 @@ class TextCleanerTest {
         untouched.forEach { assertEquals(it, TextCleaner.clean(it)) }
     }
 }
+
+class LanguageDetectorTest {
+
+    @Test
+    fun usesPageLanguageAndText() {
+        val english = listOf("He walked into the room and looked at her. It was late, and the city was quiet.")
+        assertEquals("en", LanguageDetector.detect("en-US", english))
+        assertEquals("en", LanguageDetector.detect(null, english))
+        assertEquals("zh", LanguageDetector.detect("en", listOf("他走进房间，看着她。天色已晚，城市一片寂静。")))
+        assertEquals("ko", LanguageDetector.detect(null, listOf("그는 방으로 걸어 들어가 그녀를 바라보았다.")))
+        assertEquals("ja", LanguageDetector.detect(null, listOf("彼は部屋に入って、彼女を見た。もう遅かった。")))
+        assertEquals("ru", LanguageDetector.detect(null, listOf("Он вошёл в комнату и посмотрел на неё.")))
+        assertEquals("sv", LanguageDetector.detect("sv", listOf("Han gick in i rummet och tittade på henne.")))
+        assertEquals("en", LanguageDetector.detect("zh-CN", english))
+        assertNull(LanguageDetector.detect(null, listOf("Han gick in i rummet och tittade på henne.")))
+    }
+}

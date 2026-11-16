@@ -114,5 +114,14 @@
     <string name="downloads_finished">Senaste nedladdningen: %1$d av %2$d kapitel klara.</string>
     <string name="downloads_finished_error">Senaste nedladdningen stannade efter %1$d kapitel: %2$s</string>
     <string name="delete">Ta bort</string>
+    <string name="setting_language">Språk för uppläsning</string>
+    <string name="language_auto">Automatiskt (efter sidans språk)</string>
+    <string name="setting_voice">Röst för %1$s</string>
+    <string name="voice_default">Standardröst</string>
+    <string name="voice_try">Provlyssna</string>
+    <string name="voice_sample">Så här låter uppläsningen.</string>
+    <string name="voices_loading">Hämtar röster…</string>
+    <string name="voices_none">Ingen röst för %1$s är installerad. Lägg till den under Röst och språk nedan (i TTS-motorns inställningar → Installera röstdata).</string>
+    <string name="error_voice_missing">rösten för %1$s saknas, installera den i TTS-inställningarna</string>
     <string name="setting_open_tts">Röst och språk (systemets TTS-inställningar)</string>
 </resources>
