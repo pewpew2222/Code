@@ -180,6 +180,39 @@ class ContentExtractorTest {
     }
 
     @Test
+    fun dropsTranslatorAndEditorCredits() {
+        val html = """
+            <div id="chapter-content">
+              <p>Translator: Henyee Translations Editor: Henyee Translations</p>
+              <p>TL: Someone</p>
+              <p>Translated by Atlas Studios</p>
+              <p>【翻译：某人】</p>
+              <p>7 pm.</p>
+              $story
+              <p>Editor: he said the word slowly, tasting it, and the room went quiet.</p>
+              ${"<p>More of the story continues here with plenty of words to read.</p>".repeat(6)}
+              <p>Proofreader: Jane</p>
+            </div>
+        """.trimIndent()
+
+        val result = ContentExtractor.extract(Jsoup.parse(html, "https://empirenovel.com/c3"))
+
+        assertEquals("7 pm.", result.paragraphs.first())
+        assertTrue(result.paragraphs.none { it.startsWith("Translator") || it.startsWith("TL:") || it.startsWith("Translated by") })
+        assertTrue(result.paragraphs.none { it.contains("翻译") || it.startsWith("Proofreader") })
+        // The same words in the middle of the story are kept.
+        assertTrue(result.paragraphs.any { it.startsWith("Editor: he said") })
+    }
+
+    @Test
+    fun keepsStoryLinesThatStartWithStoryWordsLikeEditing() {
+        val html = """<div id="chapter-content"><p>Ed was late again.</p><p>Translation magic glowed.</p>$story</div>"""
+        val result = ContentExtractor.extract(Jsoup.parse(html, "https://s.com/c1"))
+        assertEquals("Ed was late again.", result.paragraphs[0])
+        assertEquals("Translation magic glowed.", result.paragraphs[1])
+    }
+
+    @Test
     fun keepsStoryLinesThatStartWithNavigationWords() {
         val html = """<div id="chapter-content">$story<p>Next, he opened the door.</p><p>Next</p></div>"""
         val result = ContentExtractor.extract(Jsoup.parse(html, "https://s.com/c1"))

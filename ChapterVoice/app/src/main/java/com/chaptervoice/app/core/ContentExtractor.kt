@@ -96,6 +96,7 @@ object ContentExtractor {
         val paragraphs = toParagraphs(container)
             .filterNot { isJunkLine(it) }
             .let { dropLeadingTitle(it, title) }
+            .let { dropCredits(it) }
 
         return Extracted(title, paragraphs)
     }
@@ -236,6 +237,30 @@ object ContentExtractor {
 
     private fun isJunkLine(line: String): Boolean =
         line.length <= 60 && (JUNK_LINE.matches(line) || JUNK_PHRASE.matches(line))
+
+    /**
+     * Translator/editor credits ("Translator: X Editor: Y", "TL: X", "Translated by X").
+     * Only checked near the start and end of the chapter, where sites put them, so a
+     * story line that happens to start with "Editor:" in the middle is kept.
+     */
+    private val CREDIT_LINE = Regex(
+        "^[\\s\\[(【]*(?:" +
+            // A role label followed by a colon or dash: "Translator: X", "TL - X", "编辑：X".
+            "(?:translators?|translation|editors?|proofreaders?|proofreading|tl|tlc|tl check|ed|pr|qc|" +
+            "raw provider|raws|cleaner|typesetter|翻译|翻譯|校对|校對|编辑|編輯)\\s*[:：\\-–—]" +
+            // Or "Translated by X", "Edited by X".
+            "|(?:translated|edited|proofread|translations?)\\s+by\\s)",
+        RegexOption.IGNORE_CASE,
+    )
+    private const val CREDIT_SCAN_START = 6
+    private const val CREDIT_SCAN_END = 4
+    private const val CREDIT_MAX_LENGTH = 160
+
+    private fun dropCredits(paragraphs: List<String>): List<String> =
+        paragraphs.filterIndexed { index, line ->
+            val nearEdge = index < CREDIT_SCAN_START || index >= paragraphs.size - CREDIT_SCAN_END
+            !(nearEdge && line.length <= CREDIT_MAX_LENGTH && CREDIT_LINE.containsMatchIn(line))
+        }
 
     private fun dropLeadingTitle(paragraphs: List<String>, title: String): List<String> {
         if (paragraphs.isEmpty() || title.isBlank()) return paragraphs
