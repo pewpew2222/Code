@@ -1,60 +1,41 @@
 package com.chaptervoice.app.ui
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
-import android.net.Uri
-import android.os.Message
-import android.webkit.CookieManager
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
+import android.view.ViewGroup
 import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -66,63 +47,64 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.chaptervoice.app.AdBlocker
 import com.chaptervoice.app.AppSettings
 import com.chaptervoice.app.R
-import com.chaptervoice.app.core.NextMode
+import com.chaptervoice.app.browser.BrowserTab
+import com.chaptervoice.app.browser.TabManager
+import com.chaptervoice.app.data.BookmarkStore
 import com.chaptervoice.app.service.ReaderService
 import com.chaptervoice.app.service.ReaderState
 import com.chaptervoice.app.service.ReaderStatus
-import com.chaptervoice.app.service.ReaderUiState
 import org.json.JSONTokener
-import kotlin.math.roundToInt
+
+private enum class Overlay { NONE, TABS, BOOKMARKS }
 
 @Composable
 fun ReaderScreen(
     settings: AppSettings,
+    tabs: TabManager,
     incomingUrl: String?,
     onIncomingUrlHandled: () -> Unit,
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val state by ReaderState.state.collectAsStateWithLifecycle()
+    val bookmarkStore = remember { BookmarkStore.get(context) }
+    val bookmarks by bookmarkStore.items.collectAsStateWithLifecycle()
 
-    var addressText by remember { mutableStateOf(settings.lastUrl) }
-    var pageProgress by remember { mutableIntStateOf(100) }
-    var canGoBack by remember { mutableStateOf(false) }
+    val active = tabs.active
+    var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
     var showSettings by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
+    /** The tab whose page is being read aloud; it follows the reader to new chapters. */
+    var readerTabId by remember { mutableLongStateOf(-1L) }
 
-    val webView = remember {
-        createWebView(
-            context,
-            settings,
-            onPageStarted = { url -> addressText = url },
-            onPageFinished = { url, back ->
-                addressText = url
-                canGoBack = back
-                settings.lastUrl = url
-            },
-            onProgress = { pageProgress = it },
-        ).apply { loadUrl(settings.lastUrl) }
+    var addressText by remember(active.id, active.url) { mutableStateOf(active.url) }
+    val isBookmarked = active.url.isNotEmpty() && bookmarks.any { BookmarkStore.sameUrl(it.url, active.url) }
+
+    fun open(url: String, inNewTab: Boolean = false) {
+        overlay = Overlay.NONE
+        if (inNewTab) tabs.newTab(url) else active.load(url)
     }
 
-    BackHandler(enabled = canGoBack) { webView.goBack() }
+    BackHandler(enabled = overlay != Overlay.NONE) { overlay = Overlay.NONE }
+    BackHandler(enabled = overlay == Overlay.NONE && active.canGoBack) { active.goBack() }
 
     LaunchedEffect(incomingUrl) {
         if (incomingUrl != null) {
-            webView.loadUrl(incomingUrl)
+            open(incomingUrl, inNewTab = active.url.isNotEmpty())
             onIncomingUrlHandled()
         }
     }
 
-    // Follow the reader in the browser when it moves on to the next chapter.
+    // Follow the reader in its tab when it moves on to the next chapter.
     LaunchedEffect(state.chapterUrl) {
         val url = state.chapterUrl ?: return@LaunchedEffect
-        if (state.status != ReaderStatus.IDLE && url.trimEnd('/') != webView.url?.trimEnd('/')) {
-            webView.loadUrl(url)
-        }
+        val tab = tabs.find(readerTabId) ?: return@LaunchedEffect
+        if (state.status != ReaderStatus.IDLE && !BookmarkStore.sameUrl(url, tab.url)) tab.load(url)
     }
 
     Column(
@@ -131,10 +113,11 @@ fun ReaderScreen(
             .systemBarsPadding()
             .imePadding(),
     ) {
+        // ------------------------------------------------------------ toolbar
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .padding(start = 8.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             OutlinedTextField(
@@ -145,27 +128,116 @@ fun ReaderScreen(
                 placeholder = { Text(stringResource(R.string.address_hint)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
                 keyboardActions = KeyboardActions(onGo = {
-                    webView.loadUrl(normalizeAddress(addressText))
+                    open(normalizeAddress(addressText))
                     focusManager.clearFocus()
                 }),
+                trailingIcon = if (active.url.isNotEmpty()) {
+                    {
+                        IconButton(onClick = { bookmarkStore.toggle(active.url, active.title) }) {
+                            Icon(
+                                painterResource(if (isBookmarked) R.drawable.ic_star else R.drawable.ic_star_border),
+                                contentDescription = stringResource(
+                                    if (isBookmarked) R.string.bookmark_remove else R.string.bookmark_add,
+                                ),
+                                tint = if (isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                } else {
+                    null
+                },
             )
-            IconButton(onClick = { showSettings = true }) {
-                Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+            TabCountButton(count = tabs.tabs.size) {
+                overlay = if (overlay == Overlay.TABS) Overlay.NONE else Overlay.TABS
+            }
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.menu))
+                }
+                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.tab_new)) },
+                        onClick = { showMenu = false; overlay = Overlay.NONE; tabs.newTab() },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.bookmarks)) },
+                        onClick = { showMenu = false; overlay = Overlay.BOOKMARKS },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.forward)) },
+                        enabled = active.canGoForward,
+                        onClick = { showMenu = false; active.goForward() },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.reload)) },
+                        enabled = active.url.isNotEmpty(),
+                        onClick = { showMenu = false; active.reload() },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.settings)) },
+                        onClick = { showMenu = false; showSettings = true },
+                    )
+                }
             }
         }
-        if (pageProgress < 100) {
-            LinearProgressIndicator(
-                progress = { pageProgress / 100f },
-                modifier = Modifier.fillMaxWidth(),
-            )
+        if (overlay == Overlay.NONE && active.url.isNotEmpty() && active.progress < 100) {
+            LinearProgressIndicator(progress = { active.progress / 100f }, modifier = Modifier.fillMaxWidth())
         }
 
-        AndroidView(factory = { webView }, modifier = Modifier.weight(1f).fillMaxWidth())
+        // ------------------------------------------------------------ content
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            when {
+                overlay == Overlay.TABS -> TabsOverview(
+                    tabs = tabs.tabs,
+                    activeId = tabs.activeId,
+                    readerTabId = readerTabId,
+                    onSelect = { tabs.select(it); overlay = Overlay.NONE },
+                    onClose = { tabs.close(it) },
+                    onNewTab = { tabs.newTab(); overlay = Overlay.NONE },
+                    onCloseAll = { tabs.closeAll(); overlay = Overlay.NONE },
+                )
+                overlay == Overlay.BOOKMARKS -> BookmarksList(
+                    bookmarks = bookmarks,
+                    onOpen = { open(it) },
+                    onOpenInNewTab = { open(it, inNewTab = true) },
+                    onDelete = { bookmarkStore.remove(it) },
+                    onClose = { overlay = Overlay.NONE },
+                )
+                active.url.isEmpty() -> StartPage(
+                    bookmarks = bookmarks,
+                    onOpen = { open(it) },
+                    onDelete = { bookmarkStore.remove(it) },
+                )
+                else -> ActiveWebView(active)
+            }
+        }
 
         PlayerPanel(
             state = state,
-            onReadPage = { readCurrentPage(context, webView) },
+            onReadPage = {
+                if (active.url.isNotEmpty()) {
+                    readerTabId = active.id
+                    readCurrentPage(context, active.webView)
+                }
+            },
             onCommand = { action -> ReaderService.send(context, action) },
+        )
+    }
+
+    tabs.linkMenuUrl?.let { link ->
+        AlertDialog(
+            onDismissRequest = { tabs.linkMenuUrl = null },
+            title = { Text(link, maxLines = 3, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium) },
+            confirmButton = {
+                TextButton(onClick = { tabs.linkMenuUrl = null; tabs.newTab(link) }) {
+                    Text(stringResource(R.string.open_in_new_tab))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { tabs.linkMenuUrl = null; tabs.newTab(link, activate = false) }) {
+                    Text(stringResource(R.string.open_in_background_tab))
+                }
+            },
         )
     }
 
@@ -182,259 +254,41 @@ fun ReaderScreen(
     }
 }
 
+/** Shows the active tab's WebView, moving it into place when the tab changes. */
 @Composable
-private fun PlayerPanel(
-    state: ReaderUiState,
-    onReadPage: () -> Unit,
-    onCommand: (String) -> Unit,
-) {
-    Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-            if (state.status == ReaderStatus.IDLE) {
-                Button(onClick = onReadPage, modifier = Modifier.fillMaxWidth()) {
-                    Icon(painterResource(R.drawable.ic_play), contentDescription = null)
-                    Spacer(Modifier.size(8.dp))
-                    Text(stringResource(R.string.read_this_page))
-                }
-                return@Column
-            }
-
-            Text(
-                text = state.chapterTitle ?: state.chapterUrl.orEmpty(),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = statusLine(state),
-                style = MaterialTheme.typography.bodySmall,
-                color = if (state.status == ReaderStatus.ERROR) MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (state.status == ReaderStatus.LOADING) {
-                LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 6.dp))
-            } else if (state.currentText.isNotEmpty()) {
-                Text(
-                    text = state.currentText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 6.dp),
+private fun ActiveWebView(tab: BrowserTab) {
+    AndroidView(
+        factory = { FrameLayout(it) },
+        modifier = Modifier.fillMaxSize(),
+        update = { container ->
+            val webView = tab.webView
+            if (container.getChildAt(0) !== webView) {
+                container.removeAllViews()
+                (webView.parent as? ViewGroup)?.removeView(webView)
+                container.addView(
+                    webView,
+                    FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
                 )
-            }
-
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(top = 6.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ControlButton(R.drawable.ic_rewind, R.string.action_prev_paragraph) {
-                    onCommand(ReaderService.ACTION_PREV_PARAGRAPH)
-                }
-                val playing = state.status == ReaderStatus.PLAYING
-                FilledIconButton(
-                    onClick = { onCommand(ReaderService.ACTION_TOGGLE) },
-                    modifier = Modifier.size(56.dp),
-                    enabled = state.status != ReaderStatus.LOADING,
-                ) {
-                    Icon(
-                        painterResource(if (playing) R.drawable.ic_pause else R.drawable.ic_play),
-                        contentDescription = stringResource(if (playing) R.string.action_pause else R.string.action_play),
-                    )
-                }
-                ControlButton(R.drawable.ic_fast_forward, R.string.action_next_paragraph) {
-                    onCommand(ReaderService.ACTION_NEXT_PARAGRAPH)
-                }
-                ControlButton(R.drawable.ic_skip_next, R.string.action_next_chapter) {
-                    onCommand(ReaderService.ACTION_NEXT_CHAPTER)
-                }
-                ControlButton(R.drawable.ic_stop, R.string.action_stop) {
-                    onCommand(ReaderService.ACTION_STOP)
-                }
-            }
-            TextButton(onClick = onReadPage, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                Text(stringResource(R.string.read_this_page_instead))
-            }
-        }
-    }
-}
-
-@Composable
-private fun ControlButton(@DrawableRes icon: Int, label: Int, onClick: () -> Unit) {
-    IconButton(onClick = onClick) {
-        Icon(painterResource(icon), contentDescription = stringResource(label))
-    }
-}
-
-@Composable
-private fun statusLine(state: ReaderUiState): String = when (state.status) {
-    ReaderStatus.LOADING -> stringResource(R.string.status_loading)
-    ReaderStatus.ERROR, ReaderStatus.FINISHED -> state.message.orEmpty()
-    else -> buildString {
-        append(stringResource(R.string.status_position, state.position, state.total))
-        if (state.chaptersRead > 0) {
-            append(" · ")
-            append(stringResource(R.string.status_chapters_read, state.chaptersRead))
-        }
-    }
-}
-
-@Composable
-private fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    var rate by remember { mutableFloatStateOf(settings.speechRate) }
-    var pitch by remember { mutableFloatStateOf(settings.pitch) }
-    var mode by remember { mutableStateOf(settings.nextMode) }
-    var autoContinue by remember { mutableStateOf(settings.autoContinue) }
-    var readTitle by remember { mutableStateOf(settings.readTitle) }
-    var limit by remember { mutableIntStateOf(settings.chapterLimit) }
-    var adBlock by remember { mutableStateOf(settings.adBlock) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done)) } },
-        title = { Text(stringResource(R.string.settings)) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
-                Text(stringResource(R.string.setting_rate, rate))
-                Slider(
-                    value = rate,
-                    onValueChange = { rate = (it * 10).roundToInt() / 10f },
-                    onValueChangeFinished = { settings.speechRate = rate; onChanged() },
-                    valueRange = 0.5f..3f,
-                )
-                Text(stringResource(R.string.setting_pitch, pitch))
-                Slider(
-                    value = pitch,
-                    onValueChange = { pitch = (it * 10).roundToInt() / 10f },
-                    onValueChangeFinished = { settings.pitch = pitch; onChanged() },
-                    valueRange = 0.5f..2f,
-                )
-
-                HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                SwitchRow(stringResource(R.string.setting_auto_continue), autoContinue) {
-                    autoContinue = it; settings.autoContinue = it
-                }
-                SwitchRow(stringResource(R.string.setting_read_title), readTitle) {
-                    readTitle = it; settings.readTitle = it
-                }
-                SwitchRow(stringResource(R.string.setting_ad_block, AdBlocker.domainCount), adBlock) {
-                    adBlock = it; settings.adBlock = it
-                }
-
-                Text(stringResource(R.string.setting_next_mode), Modifier.padding(top = 8.dp), fontWeight = FontWeight.SemiBold)
-                listOf(
-                    NextMode.AUTO to R.string.mode_auto,
-                    NextMode.LINK to R.string.mode_link,
-                    NextMode.URL_INCREMENT to R.string.mode_url,
-                ).forEach { (value, label) ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .selectable(selected = mode == value, onClick = { mode = value; settings.nextMode = value }),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = mode == value, onClick = null)
-                        Text(stringResource(label), Modifier.padding(start = 8.dp, top = 6.dp, bottom = 6.dp))
-                    }
-                }
-
-                HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                Text(
-                    if (limit == 0) stringResource(R.string.setting_limit_off)
-                    else stringResource(R.string.setting_limit, limit),
-                )
-                Slider(
-                    value = limit.toFloat(),
-                    onValueChange = { limit = it.roundToInt() },
-                    onValueChangeFinished = { settings.chapterLimit = limit },
-                    valueRange = 0f..20f,
-                    steps = 19,
-                )
-
-                Spacer(Modifier.height(8.dp))
-                TextButton(onClick = { openTtsSettings(context) }) {
-                    Text(stringResource(R.string.setting_open_tts))
-                }
             }
         },
+        onRelease = { container -> container.removeAllViews() },
     )
 }
 
 @Composable
-private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChange)
-    }
-}
-
-// -------------------------------------------------------------------- helpers
-
-@SuppressLint("SetJavaScriptEnabled")
-private fun createWebView(
-    context: Context,
-    appSettings: AppSettings,
-    onPageStarted: (String) -> Unit,
-    onPageFinished: (String, Boolean) -> Unit,
-    onProgress: (Int) -> Unit,
-): WebView = WebView(context).apply {
-    settings.javaScriptEnabled = true
-    settings.domStorageEnabled = true
-    settings.loadWithOverviewMode = true
-    settings.useWideViewPort = true
-    settings.builtInZoomControls = true
-    settings.displayZoomControls = false
-    settings.setSupportMultipleWindows(true)
-    settings.javaScriptCanOpenWindowsAutomatically = false
-    CookieManager.getInstance().setAcceptCookie(true)
-    CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-    webViewClient = object : WebViewClient() {
-        override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) = onPageStarted(url)
-
-        override fun onPageCommitVisible(view: WebView, url: String) {
-            if (appSettings.adBlock) view.evaluateJavascript(AdBlocker.injectCssScript, null)
-        }
-
-        override fun onPageFinished(view: WebView, url: String) {
-            if (appSettings.adBlock) view.evaluateJavascript(AdBlocker.injectCssScript, null)
-            CookieManager.getInstance().flush()
-            onPageFinished(url, view.canGoBack())
-        }
-
-        override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
-            if (appSettings.adBlock) AdBlocker.intercept(request) else null
-
-        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-            val target = request.url
-            // intent://, market:// and similar: almost always ads trying to open an app store.
-            if (target.scheme != "http" && target.scheme != "https") return true
-            if (!appSettings.adBlock) return false
-            val currentHost = view.url?.let { Uri.parse(it).host }
-            return target.host != currentHost && AdBlocker.isBlocked(target)
-        }
-    }
-    webChromeClient = object : WebChromeClient() {
-        override fun onProgressChanged(view: WebView, newProgress: Int) = onProgress(newProgress)
-
-        /**
-         * Pop-up windows are never opened. A link the user tapped that wants a new
-         * window (target="_blank") opens in the same view instead.
-         */
-        override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?): Boolean {
-            if (!isUserGesture) return false
-            val hit = view.hitTestResult
-            val link = hit.extra
-            if (link != null && (hit.type == WebView.HitTestResult.SRC_ANCHOR_TYPE ||
-                    hit.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE)
-            ) {
-                val uri = Uri.parse(link)
-                if (!(appSettings.adBlock && AdBlocker.isBlocked(uri))) view.loadUrl(link)
-            }
-            return false
+private fun TabCountButton(count: Int, onClick: () -> Unit) {
+    IconButton(onClick = onClick) {
+        Box(
+            Modifier
+                .size(24.dp)
+                .border(2.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(5.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = if (count > 99) "∞" else count.toString(),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+            )
         }
     }
 }
@@ -460,9 +314,4 @@ private fun normalizeAddress(input: String): String {
         text.contains('.') && !text.contains(' ') -> "https://$text"
         else -> "https://www.google.com/search?q=" + java.net.URLEncoder.encode(text, "UTF-8")
     }
-}
-
-private fun openTtsSettings(context: Context) {
-    val intent = Intent("com.android.settings.TTS_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    runCatching { context.startActivity(intent) }
 }

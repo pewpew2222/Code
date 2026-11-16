@@ -36,6 +36,7 @@ import com.chaptervoice.app.core.Chapter
 import com.chaptervoice.app.core.ChapterFetcher
 import com.chaptervoice.app.core.ChapterParser
 import com.chaptervoice.app.core.TextChunker
+import com.chaptervoice.app.data.BookmarkStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -276,7 +277,12 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
     }
 
     private fun start(loaded: Chapter) {
+        val previous = chapter
         chapter = loaded
+        if (previous != null && previous.url != loaded.url) {
+            // A bookmark on the previous chapter moves along to this one.
+            BookmarkStore.get(this).advance(previous.url, loaded.url, loaded.pageTitle.ifBlank { loaded.title })
+        }
         val text = buildList {
             if (settings.readTitle && loaded.title.isNotBlank()) add(loaded.title)
             addAll(loaded.paragraphs)
