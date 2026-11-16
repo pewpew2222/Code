@@ -1,5 +1,7 @@
 package com.chaptervoice.app.ui
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import android.content.Context
 import android.view.ViewGroup
 import android.webkit.WebView
