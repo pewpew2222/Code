@@ -59,11 +59,44 @@ object TextCleaner {
      * only removed from English text.
      */
     fun clean(text: String, language: String? = null): String {
-        var result = fixSymbols(text)
+        var result = removeEmoticons(text)
+        result = fixSymbols(result)
         result = fixLookAlikeLetters(result)
         if (language == "en") result = toPlainLatin(result)
         result = removeCensorDots(result)
         return removeWatermarks(result)
+    }
+
+    // ---------------------------------------------------------------- emoticons
+
+    /** A short bracketed group: "(〒﹏〒)", "（╯°□°）", "(^_^)". */
+    private val BRACKETED = Regex("[(（]([^()（）]{1,25})[)）]")
+
+    /** Western and Asian text emoticons written on their own: "^_^", "T_T", ">_<", ":D". */
+    private val EMOTICON = Regex(
+        "(?<!\\S)(?:\\^_*\\^|[Tt]_+[Tt]|[Tt]\\.[Tt]|>_+<|-_+-|[oO0]_+[oO0]|[Qq][Aa][Qq]|[Qq][wW][Qq]|" +
+            "[UuOo][wW][UuOo]|:-?[)(DPp]|;-?\\)|xD|XD|<3)(?!\\S)",
+    )
+    private val TILDE = Regex("[~～〜]+")
+    private val LETTER_OR_DIGIT = Regex("[\\p{L}\\p{N}]")
+
+    /**
+     * Kaomoji such as "(〒﹏〒)" and "(╯°□°)╯", which TTS would read symbol by symbol.
+     * A bracketed group is a kaomoji when it is mostly symbols (at most two letters),
+     * so normal brackets like "(he said quietly)" stay.
+     */
+    private fun removeEmoticons(text: String): String {
+        var result = BRACKETED.replace(text) { match ->
+            val inner = match.groupValues[1]
+            val letters = inner.count { it.isLetterOrDigit() }
+            val symbols = inner.count { !it.isLetterOrDigit() && !it.isWhitespace() }
+            if (letters <= 2 && symbols >= 1) "" else match.value
+        }
+        result = EMOTICON.replace(result, "")
+        result = TILDE.replace(result, "")
+        // Leftover arm/table pieces around a removed kaomoji, e.g. "╯︵ ┻━┻".
+        if (!LETTER_OR_DIGIT.containsMatchIn(result)) return ""
+        return result.replace(Regex("\\s{2,}"), " ").trim()
     }
 
     // ---------------------------------------------------------------- watermarks

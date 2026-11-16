@@ -394,6 +394,18 @@ class TextCleanerTest {
     }
 
     @Test
+    fun removesKaomojiAndEmoticons() {
+        assertEquals("", TextCleaner.clean("(〒 ﹏〒)"))
+        assertEquals("", TextCleaner.clean("(╯°□°）╯︵ ┻━┻"))
+        assertEquals("* * *".let { TextCleaner.clean(it) }, "")
+        assertEquals("Hmph Why should I believe you?", TextCleaner.clean("Hmph~ Why should I believe you?"))
+        assertEquals("She smiled. Thanks!", TextCleaner.clean("She smiled. (^_^) Thanks! T_T"))
+        // Normal brackets and numbers stay.
+        assertEquals("He nodded (he said quietly).", TextCleaner.clean("He nodded (he said quietly)."))
+        assertEquals("Level (5) reached.", TextCleaner.clean("Level (5) reached."))
+    }
+
+    @Test
     fun removesSiteWatermarks() {
         assertEquals("He raised his hand.", TextCleaner.clean("He raised his hand. ɼ𝖆NóＢÈs", "en"))
         assertEquals("She smiled.", TextCleaner.clean("She smiled. Read the latest chapters at novelbin.com!", "en"))
