@@ -38,6 +38,8 @@ import com.chaptervoice.app.core.ChapterParser
 import com.chaptervoice.app.core.TextChunker
 import com.chaptervoice.app.core.TextCleaner
 import com.chaptervoice.app.data.BookmarkStore
+import com.chaptervoice.app.data.DownloadWorker
+import com.chaptervoice.app.data.OfflineStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -100,6 +102,9 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
     private var loadJob: Job? = null
     private var prefetch: Pair<String, Deferred<Result<Chapter>>>? = null
     private var chaptersRead = 0
+
+    /** The address the current chapter was opened with (its key in the offline store). */
+    private var requestedUrl: String? = null
 
     private var focusRequest: AudioFocusRequestCompat? = null
     private var resumeOnFocusGain = false
@@ -238,6 +243,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         playing = false
         loadJob?.cancel()
         settings.lastUrl = url
+        requestedUrl = url
         ReaderState.update {
             it.copy(status = ReaderStatus.LOADING, chapterUrl = url, message = null, currentText = "")
         }
@@ -270,8 +276,10 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         }
     }
 
+    /** Saved (offline) chapters are used first; otherwise the chapter is downloaded. */
     private suspend fun fetch(url: String, referrer: String?): Result<Chapter> =
         withContext(Dispatchers.IO) {
+            OfflineStore.get(this@ReaderService).get(url)?.let { return@withContext Result.success(it) }
             runCatching { fetcher.fetch(url, settings.nextMode, referrer) }
         }
 
@@ -307,6 +315,8 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
                 .build(),
         )
         prefetchNext(loaded)
+        val next = loaded.nextUrl
+        if (next != null && settings.preloadCount > 0) DownloadWorker.preload(this, next, settings.preloadCount)
         resume()
     }
 
@@ -363,6 +373,9 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
 
     private fun onChapterFinished() {
         chaptersRead++
+        if (settings.deleteAfterRead) {
+            listOfNotNull(requestedUrl, chapter?.url).forEach { OfflineStore.get(this).remove(it) }
+        }
         ReaderState.update { it.copy(chaptersRead = chaptersRead) }
         val limit = settings.chapterLimit
         when {

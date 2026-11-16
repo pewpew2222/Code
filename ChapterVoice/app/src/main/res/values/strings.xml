@@ -93,5 +93,25 @@
     <string name="setting_limit">Stoppa efter %1$d kapitel</string>
     <string name="setting_ad_block">Blockera reklam (%1$d domäner)</string>
     <string name="setting_remove_overlays">Ta bort flytande reklamrutor (video, popup-notiser)</string>
+    <string name="setting_preload">Förladda %1$d kapitel framåt när du läser (för offline)</string>
+    <string name="setting_preload_off">Förladdning för offline: av</string>
+    <string name="setting_delete_after_read">Ta bort nedladdade kapitel när de har lästs</string>
+    <string name="downloads_channel">Nedladdningar</string>
+    <string name="downloading">Laddar ner kapitel %1$d av %2$d</string>
+    <string name="downloads">Nedladdat</string>
+    <string name="download_chapters">Ladda ner kapitel…</string>
+    <string name="download_dialog_title">Ladda ner för offline</string>
+    <string name="download_dialog_text">Den här sidan och följande kapitel, totalt %1$d st, sparas så att de kan läsas upp utan internet.</string>
+    <string name="download_start">Ladda ner</string>
+    <string name="downloads_summary">%1$d kapitel · %2$s</string>
+    <string name="downloads_empty">Inga nedladdade kapitel. Öppna ett kapitel och välj ⋮ → Ladda ner kapitel…, eller slå på förladdning i inställningarna.</string>
+    <string name="downloads_delete_all">Ta bort alla</string>
+    <string name="downloads_delete_all_title">Ta bort alla nedladdade kapitel?</string>
+    <string name="downloads_delete_site">Ta bort alla från sajten</string>
+    <string name="downloads_running">Laddar ner %1$d av %2$d: %3$s</string>
+    <string name="downloads_waiting">Väntar på internet…</string>
+    <string name="downloads_finished">Senaste nedladdningen: %1$d av %2$d kapitel klara.</string>
+    <string name="downloads_finished_error">Senaste nedladdningen stannade efter %1$d kapitel: %2$s</string>
+    <string name="delete">Ta bort</string>
     <string name="setting_open_tts">Röst och språk (systemets TTS-inställningar)</string>
 </resources>

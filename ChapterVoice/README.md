@@ -24,6 +24,7 @@ vidare till nästa kapitel. Gjord för webbnoveller.
   Listan följer med appen och uppdateras automatiskt en gång i veckan, kompletterad med en egen lista över annonsnätverk som är vanliga på novellsajter (Adsterra, Monetag, Ezoic m.fl.).
   Under ⋮ → Reklamblockering på sidan ser du vilka domäner sidan hämtar från och kan blockera eller tillåta dem, och med "Dölj element" trycker du på en annons för att dölja den på hela sajten. Blockeringen går att stänga av i inställningarna.
 - **Flikar och bokmärken** som i en vanlig webbläsare. Flikarna sparas mellan starterna, ett långt tryck på en länk ger "Öppna i ny flik", och en ny flik visar en startsida med snabbnavigering (bokmärken och novellsajter per språk, med sökning). Ett bokmärkt kapitel flyttas automatiskt med när uppläsningen går till nästa kapitel, så bokmärket fungerar som läsmarkör.
+- **Offline:** ladda ner valfritt antal kapitel (⋮ → Ladda ner kapitel…) och förladda automatiskt de närmaste kapitlen medan du läser. Sparade kapitel visas under ⋮ → Nedladdat och läses upp utan internet. Lästa kapitel tas bort automatiskt (går att stänga av).
 - **Historik** över besökta sidor, grupperad per dag, med sökning.
 - Dela en länk från vilken webbläsare som helst till appen för att öppna den.
 - Första kapitlet läses från sidan som webbläsaren visar. Följande kapitel hämtas med

@@ -48,6 +48,8 @@ internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDism
     var limit by remember { mutableIntStateOf(settings.chapterLimit) }
     var adBlock by remember { mutableStateOf(settings.adBlock) }
     var removeOverlays by remember { mutableStateOf(settings.removeOverlays) }
+    var preload by remember { mutableIntStateOf(settings.preloadCount) }
+    var deleteAfterRead by remember { mutableStateOf(settings.deleteAfterRead) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -113,6 +115,22 @@ internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDism
                     valueRange = 0f..20f,
                     steps = 19,
                 )
+
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                Text(
+                    if (preload == 0) stringResource(R.string.setting_preload_off)
+                    else stringResource(R.string.setting_preload, preload),
+                )
+                Slider(
+                    value = preload.toFloat(),
+                    onValueChange = { preload = it.roundToInt() },
+                    onValueChangeFinished = { settings.preloadCount = preload },
+                    valueRange = 0f..20f,
+                    steps = 19,
+                )
+                SwitchRow(stringResource(R.string.setting_delete_after_read), deleteAfterRead) {
+                    deleteAfterRead = it; settings.deleteAfterRead = it
+                }
 
                 Spacer(Modifier.height(8.dp))
                 TextButton(onClick = { openTtsSettings(context) }) {

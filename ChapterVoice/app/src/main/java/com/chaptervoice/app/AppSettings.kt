@@ -37,6 +37,15 @@ class AppSettings(context: Context) {
 
     fun lastUrlOrNull(): String? = prefs.getString("last_url", null)
 
+    /** Chapters to keep downloaded ahead while reading (0 = off). */
+    var preloadCount: Int
+        get() = prefs.getInt("preload_count", 3)
+        set(value) = prefs.edit().putInt("preload_count", value).apply()
+
+    var deleteAfterRead: Boolean
+        get() = prefs.getBoolean("delete_after_read", true)
+        set(value) = prefs.edit().putBoolean("delete_after_read", value).apply()
+
     var removeOverlays: Boolean
         get() = prefs.getBoolean("remove_overlays", true)
         set(value) = prefs.edit().putBoolean("remove_overlays", value).apply()

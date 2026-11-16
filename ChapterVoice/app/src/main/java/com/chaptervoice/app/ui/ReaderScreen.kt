@@ -57,13 +57,14 @@ import com.chaptervoice.app.R
 import com.chaptervoice.app.browser.BrowserTab
 import com.chaptervoice.app.browser.TabManager
 import com.chaptervoice.app.data.BookmarkStore
+import com.chaptervoice.app.data.DownloadWorker
 import com.chaptervoice.app.data.HistoryStore
 import com.chaptervoice.app.service.ReaderService
 import com.chaptervoice.app.service.ReaderState
 import com.chaptervoice.app.service.ReaderStatus
 import org.json.JSONTokener
 
-private enum class Overlay { NONE, TABS, BOOKMARKS, HISTORY, BLOCKER }
+private enum class Overlay { NONE, TABS, BOOKMARKS, HISTORY, BLOCKER, DOWNLOADS }
 
 @Composable
 fun ReaderScreen(
@@ -84,6 +85,7 @@ fun ReaderScreen(
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
     var showSettings by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var showDownloadDialog by remember { mutableStateOf(false) }
     /** The tab whose page is being read aloud; it follows the reader to new chapters. */
     var readerTabId by remember { mutableLongStateOf(-1L) }
 
@@ -184,6 +186,15 @@ fun ReaderScreen(
                         onClick = { showMenu = false; active.reload() },
                     )
                     DropdownMenuItem(
+                        text = { Text(stringResource(R.string.download_chapters)) },
+                        enabled = active.url.isNotEmpty(),
+                        onClick = { showMenu = false; showDownloadDialog = true },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.downloads)) },
+                        onClick = { showMenu = false; overlay = Overlay.DOWNLOADS },
+                    )
+                    DropdownMenuItem(
                         text = { Text(stringResource(R.string.blocker_title)) },
                         enabled = active.url.isNotEmpty(),
                         onClick = { showMenu = false; overlay = Overlay.BLOCKER },
@@ -222,6 +233,14 @@ fun ReaderScreen(
                     onOpen = { open(it) },
                     onDelete = { historyStore.remove(it) },
                     onClear = { historyStore.clear() },
+                    onClose = { overlay = Overlay.NONE },
+                )
+                overlay == Overlay.DOWNLOADS -> DownloadsScreen(
+                    onPlay = { url ->
+                        overlay = Overlay.NONE
+                        readerTabId = -1L // played from storage, not from a tab
+                        ReaderService.send(context, ReaderService.ACTION_PLAY_URL, url)
+                    },
                     onClose = { overlay = Overlay.NONE },
                 )
                 overlay == Overlay.BLOCKER -> BlockerScreen(
@@ -276,6 +295,17 @@ fun ReaderScreen(
                     Text(stringResource(R.string.open_in_background_tab))
                 }
             },
+        )
+    }
+
+    if (showDownloadDialog) {
+        DownloadDialog(
+            onDownload = { count ->
+                showDownloadDialog = false
+                DownloadWorker.download(context, active.url, count)
+                overlay = Overlay.DOWNLOADS
+            },
+            onDismiss = { showDownloadDialog = false },
         )
     }
 
