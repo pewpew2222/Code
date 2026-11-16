@@ -351,6 +351,13 @@ class TextCleanerTest {
     }
 
     @Test
+    fun engIsResolvedToNOrMWithTheDictionary() {
+        TextCleaner.dictionary = TextCleaner.Dictionary(setOf("drum", "sun", "quickly"), emptySet())
+        assertEquals("the drum quickly", TextCleaner.clean("the druŋ quickly", "en"))
+        assertEquals("the sun quickly", TextCleaner.clean("the suŋ quickly", "en"))
+    }
+
+    @Test
     fun withoutDictionaryCapitalsAreLeftAlone() {
         TextCleaner.dictionary = null
         assertEquals("S.H.I.T", TextCleaner.clean("S.H.I.T"))
@@ -380,6 +387,9 @@ class TextCleanerTest {
         assertEquals("a kill", TextCleaner.clean("a ќill"))
         assertEquals("kill Li Xiao", TextCleaner.clean("ǩill Lǐ Xiǎo", "en"))
         assertEquals("ķill", TextCleaner.clean("ķill", null)) // accents only removed for English
+        assertEquals("Aira's breasts, dead, hell", TextCleaner.clean("Aira's ɓreasts, đead, ħell", "en"))
+        assertEquals("kill and kill", TextCleaner.clean("𝐤𝐢𝐥𝐥 and ｋｉｌｌ", "en"))
+        assertEquals("Łukasz", TextCleaner.clean("Łukasz", null)) // Polish names untouched outside English
     }
 
     @Test

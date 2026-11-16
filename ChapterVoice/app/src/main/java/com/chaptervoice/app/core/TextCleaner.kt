@@ -19,6 +19,8 @@ object TextCleaner {
      */
     class Dictionary(private val words: Set<String>, private val acronyms: Set<String>) {
         /** A real word that is not also a known acronym ("pow" vs "POW" stays an acronym). */
+        fun isWord(word: String): Boolean = word.lowercase() in words
+
         fun isPlainWord(word: String): Boolean {
             val lower = word.lowercase()
             return lower in words && lower !in acronyms
@@ -59,7 +61,7 @@ object TextCleaner {
     fun clean(text: String, language: String? = null): String {
         var result = fixSymbols(text)
         result = fixLookAlikeLetters(result)
-        if (language == "en") result = stripAccents(result)
+        if (language == "en") result = toPlainLatin(result)
         return removeCensorDots(result)
     }
 
@@ -109,11 +111,46 @@ object TextCleaner {
 
     private val COMBINING_MARKS = Regex("\\p{Mn}+")
 
-    /** "ǩill", "ķill", "Xiǎo" -> "kill", "kill", "Xiao" (English text only). */
-    private fun stripAccents(text: String): String {
+    /**
+     * Latin letters that are separate characters rather than a letter plus a mark, so
+     * Unicode normalisation does not simplify them ("ɓreasts", "đead", "ħell").
+     */
+    private val VARIANT_LETTERS: Map<Char, Char> = mapOf(
+        'ɓ' to 'b', 'ƀ' to 'b', 'ƃ' to 'b', 'ƅ' to 'b', 'ɗ' to 'd', 'ƌ' to 'd', 'đ' to 'd', 'ɖ' to 'd',
+        'ɇ' to 'e', 'ǝ' to 'e', 'ɛ' to 'e', 'ƒ' to 'f', 'ɠ' to 'g', 'ǥ' to 'g', 'ɡ' to 'g', 'ħ' to 'h',
+        'ɦ' to 'h', 'ı' to 'i', 'ɨ' to 'i', 'ɩ' to 'i', 'ȷ' to 'j', 'ɉ' to 'j', 'ƙ' to 'k', 'ꝁ' to 'k',
+        'ł' to 'l', 'ŀ' to 'l', 'ƚ' to 'l', 'ɫ' to 'l', 'ɱ' to 'm', 'ɲ' to 'n', 'ƞ' to 'n', 'ŋ' to 'n',
+        'ø' to 'o', 'ɵ' to 'o', 'ɔ' to 'o', 'ƥ' to 'p', 'ɋ' to 'q', 'ɍ' to 'r', 'ɽ' to 'r', 'ʂ' to 's',
+        'ŧ' to 't', 'ƭ' to 't', 'ʈ' to 't', 'ʉ' to 'u', 'ʋ' to 'v', 'ʌ' to 'v', 'ɏ' to 'y', 'ƴ' to 'y',
+        'ƶ' to 'z', 'ʐ' to 'z', 'ȥ' to 'z', 'ƈ' to 'c', 'ȼ' to 'c',
+        'Ɓ' to 'B', 'Ƀ' to 'B', 'Ɗ' to 'D', 'Đ' to 'D', 'Ɇ' to 'E', 'Ɛ' to 'E', 'Ƒ' to 'F', 'Ɠ' to 'G',
+        'Ǥ' to 'G', 'Ħ' to 'H', 'Ɨ' to 'I', 'Ɉ' to 'J', 'Ƙ' to 'K', 'Ł' to 'L', 'Ŋ' to 'N', 'Ø' to 'O',
+        'Ƥ' to 'P', 'Ɍ' to 'R', 'Ŧ' to 'T', 'Ƭ' to 'T', 'Ʉ' to 'U', 'Ʋ' to 'V', 'Ɏ' to 'Y', 'Ƴ' to 'Y',
+        'Ƶ' to 'Z', 'Ȼ' to 'C',
+    )
+
+    /** Letters that can stand for more than one letter; the dictionary picks the real word. */
+    private val ALTERNATIVES: Map<Char, Char> = mapOf('ŋ' to 'm', 'Ŋ' to 'M')
+
+    /**
+     * English text only: "ǩill", "ɓreasts", "𝐤𝐢𝐥𝐥", "ｋｉｌｌ", "Xiǎo" -> "kill", "breasts",
+     * "kill", "kill", "Xiao".
+     */
+    private fun toPlainLatin(text: String): String {
         if (text.all { it.code < 128 }) return text
-        return COMBINING_MARKS.replace(Normalizer.normalize(text, Normalizer.Form.NFD), "")
+        val words = WORD.replace(text) { match -> plainWord(match.value) }
+        // NFKD also turns fullwidth and "fancy font" letters (𝐤, ｋ) into plain ones.
+        return COMBINING_MARKS.replace(Normalizer.normalize(words, Normalizer.Form.NFKD), "")
             .let { Normalizer.normalize(it, Normalizer.Form.NFC) }
+    }
+
+    private fun plainWord(word: String): String {
+        if (word.none { it in VARIANT_LETTERS }) return word
+        val first = word.map { VARIANT_LETTERS[it] ?: it }.joinToString("")
+        val dict = dictionary
+        if (dict == null || dict.isWord(first) || word.none { it in ALTERNATIVES }) return first
+        val second = word.map { ALTERNATIVES[it] ?: VARIANT_LETTERS[it] ?: it }.joinToString("")
+        return if (dict.isWord(second)) second else first
     }
 
     private fun isCensored(word: String): Boolean {
