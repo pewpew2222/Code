@@ -51,6 +51,25 @@ object ContentExtractor {
         RegexOption.IGNORE_CASE,
     )
 
+    /** Short lines that are site boilerplate (share boxes, ad labels...). */
+    private val JUNK_PHRASE = Regex(
+        "^(share (this|to|with)( your)? (friends?|chapter|novel|story|book)|share this|" +
+            "advertisements?|sponsored( content)?|annons|" +
+            "report (this )?(chapter|error|problem)|" +
+            "(please )?(rate|review|vote for) (this|the) (novel|story|book|chapter)|" +
+            "tap the screen to use advanced tools.*|use arrow keys.*to (go|navigate).*)[.!:]*$",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /** Links that only exist in "share on social media" boxes. */
+    private const val SHARE_LINKS =
+        "a[href*=facebook.com/sharer], a[href*=facebook.com/dialog], a[href*=twitter.com/intent], " +
+            "a[href*=x.com/intent], a[href*=x.com/share], a[href*=reddit.com/submit], a[href*=wa.me/], " +
+            "a[href^=whatsapp:], a[href^=fb-messenger:], a[href*=pinterest.com/pin/create], " +
+            "a[href*=t.me/share], a[href*=telegram.me/share], a[href*=tumblr.com/share]"
+
+    private const val SHARE_BOX_MAX_CHARS = 120
+
     data class Extracted(val title: String, val paragraphs: List<String>)
 
     fun extract(original: Document): Extracted {
@@ -58,6 +77,7 @@ object ContentExtractor {
         val title = findTitle(doc)
 
         val body = doc.body() ?: return Extracted(title, emptyList())
+        removeShareBoxes(body)
         JUNK_SELECTORS.forEach { selector -> runCatching { body.select(selector).remove() } }
 
         val container = findByKnownSelector(body) ?: findByScore(body) ?: body
@@ -66,6 +86,23 @@ object ContentExtractor {
             .let { dropLeadingTitle(it, title) }
 
         return Extracted(title, paragraphs)
+    }
+
+    /**
+     * Removes "share to your friends" boxes: the largest ancestor of a share link that
+     * still holds only a little text (the heading plus button labels).
+     */
+    private fun removeShareBoxes(body: Element) {
+        for (link in body.select(SHARE_LINKS)) {
+            if (link.parent() == null) continue // already removed with an earlier box
+            var box: Element = link
+            var parent = link.parent()
+            while (parent != null && parent !== body && parent.text().length <= SHARE_BOX_MAX_CHARS) {
+                box = parent
+                parent = parent.parent()
+            }
+            box.remove()
+        }
     }
 
     private fun findTitle(doc: Document): String {
@@ -162,7 +199,7 @@ object ContentExtractor {
     }
 
     private fun isJunkLine(line: String): Boolean =
-        line.length <= 60 && JUNK_LINE.matches(line)
+        line.length <= 60 && (JUNK_LINE.matches(line) || JUNK_PHRASE.matches(line))
 
     private fun dropLeadingTitle(paragraphs: List<String>, title: String): List<String> {
         if (paragraphs.isEmpty() || title.isBlank()) return paragraphs

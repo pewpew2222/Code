@@ -130,6 +130,36 @@ class ContentExtractorTest {
     }
 
     @Test
+    fun removesShareBoxWithItsHeading() {
+        // Share box with neutral class names, as on sites where "[class*=share]" does not match.
+        val html = """
+            <div id="chapter-content">
+              $story
+              <p>What in the world...?</p>
+              <div class="box-x"><div class="t">Share to your friends</div>
+                <div class="row">
+                  <a href="https://www.facebook.com/sharer/sharer.php?u=x"><i></i></a>
+                  <a href="https://x.com/intent/tweet?url=x"><i></i></a>
+                  <a href="fb-messenger://share?link=x"><i></i></a>
+                </div>
+              </div>
+              <div class="banner">ADVERTISEMENT</div>
+            </div>
+        """.trimIndent()
+
+        val result = ContentExtractor.extract(Jsoup.parse(html, "https://s.com/c2"))
+
+        assertEquals("What in the world...?", result.paragraphs.last())
+    }
+
+    @Test
+    fun dropsShareHeadingEvenWithoutShareLinks() {
+        val html = """<div id="chapter-content">$story<p>The end.</p><h4>Share to your friends</h4><button>f</button></div>"""
+        val result = ContentExtractor.extract(Jsoup.parse(html, "https://s.com/c2"))
+        assertEquals("The end.", result.paragraphs.last())
+    }
+
+    @Test
     fun keepsStoryLinesThatStartWithNavigationWords() {
         val html = """<div id="chapter-content">$story<p>Next, he opened the door.</p><p>Next</p></div>"""
         val result = ContentExtractor.extract(Jsoup.parse(html, "https://s.com/c1"))
