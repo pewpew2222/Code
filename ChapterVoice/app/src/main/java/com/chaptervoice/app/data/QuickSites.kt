@@ -29,13 +29,5 @@ object QuickSites {
             "ko", "🇰🇷 한국어",
             listOf("joara.com", "munpia.com", "novelpia.com", "series.naver.com"),
         ),
-        SiteGroup(
-            "pt", "🇧🇷 Português",
-            listOf("centralnovel.com", "novelmania.com.br"),
-        ),
-        SiteGroup(
-            "ru", "🇷🇺 Русский",
-            listOf("author.today", "ranobelib.me"),
-        ),
     )
 }
