@@ -79,6 +79,9 @@ internal fun PlayerPanel(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                ControlButton(R.drawable.ic_skip_previous, R.string.action_restart_chapter) {
+                    onCommand(ReaderService.ACTION_RESTART_CHAPTER)
+                }
                 ControlButton(R.drawable.ic_rewind, R.string.action_prev_paragraph) {
                     onCommand(ReaderService.ACTION_PREV_PARAGRAPH)
                 }

@@ -67,6 +67,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         const val ACTION_NEXT_PARAGRAPH = "com.chaptervoice.NEXT_PARAGRAPH"
         const val ACTION_PREV_PARAGRAPH = "com.chaptervoice.PREV_PARAGRAPH"
         const val ACTION_NEXT_CHAPTER = "com.chaptervoice.NEXT_CHAPTER"
+        const val ACTION_RESTART_CHAPTER = "com.chaptervoice.RESTART_CHAPTER"
         const val ACTION_SETTINGS_CHANGED = "com.chaptervoice.SETTINGS_CHANGED"
         const val ACTION_STOP = "com.chaptervoice.STOP"
         const val EXTRA_URL = "url"
@@ -207,6 +208,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
             ACTION_NEXT_PARAGRAPH -> skipParagraph(1)
             ACTION_PREV_PARAGRAPH -> skipParagraph(-1)
             ACTION_NEXT_CHAPTER -> nextChapter()
+            ACTION_RESTART_CHAPTER -> restartChapter()
             ACTION_SETTINGS_CHANGED -> onSettingsChanged()
             ACTION_STOP -> stopReading()
         }
@@ -397,6 +399,13 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
             if (playing) delay(600)
             load(next, html = null)
         }
+    }
+
+    /** Back to the first paragraph, and play. */
+    private fun restartChapter() {
+        if (pieces.isEmpty()) return
+        index = 0
+        if (playing) speakFrom(0) else resume()
     }
 
     private fun skipParagraph(delta: Int) {

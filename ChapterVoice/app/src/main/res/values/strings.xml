@@ -11,6 +11,7 @@
 
     <string name="action_play">Spela</string>
     <string name="action_pause">Pausa</string>
+    <string name="action_restart_chapter">Starta om kapitlet</string>
     <string name="action_prev_paragraph">Föregående stycke</string>
     <string name="action_next_paragraph">Nästa stycke</string>
     <string name="action_next_chapter">Nästa kapitel</string>
