@@ -375,6 +375,9 @@ class TextCleanerTest {
         assertEquals("a class-room", TextCleaner.clean("a cla.s.s-room"))
         assertEquals("wang Teng shivered.", TextCleaner.clean("wang Teng shi.+vered."))
         assertEquals("What the shit", TextCleaner.clean("What the sh+it"))
+        assertEquals("Slash!", TextCleaner.clean("Slash.!.+"))
+        assertEquals("What? He left.", TextCleaner.clean("What.?.+ He left.+"))
+        assertEquals("rushed out of the classroom", TextCleaner.clean("rushed out of the cla.s.sroom"))
         assertEquals("W.a.n.g Teng".let { TextCleaner.clean(it) }, "Wang Teng")
         assertEquals("“Wang’s house,” she said.", TextCleaner.clean("“W.a.n.g’s house,” she said."))
     }

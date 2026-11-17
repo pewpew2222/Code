@@ -144,8 +144,25 @@ object TextCleaner {
     /** "sh!t", "k!ll" -> "shit", "kill"; "Wow!Amazing" is left alone. */
     private val EXCLAMATION_FOR_I = Regex("(?<=\\p{Ll})!(?=\\p{Ll})")
 
+    /**
+     * Censor noise after a word: "Slash.!.+" -> "Slash!", "What.?.+" -> "What?".
+     * Only runs at the end of a word that mix "+" with . ! ? are touched, so "C++",
+     * "A+" and in-word censoring like "shi.+vered" (handled later) are left to other rules.
+     */
+    private val PLUS_NOISE = Regex("(?<=\\p{L})[.!?+]*\\+[.!?+]*(?!\\p{L})")
+
+    private fun fixPlusNoise(text: String): String = PLUS_NOISE.replace(text) { match ->
+        val run = match.value
+        when {
+            run.none { it == '.' || it == '!' || it == '?' } -> run // "C++", "A+"
+            '!' in run -> "!"
+            '?' in run -> "?"
+            else -> "."
+        }
+    }
+
     private fun fixSymbols(text: String): String =
-        EXCLAMATION_FOR_I.replace(CURRENCY_FOR_E.replace(text, "e"), "i")
+        EXCLAMATION_FOR_I.replace(CURRENCY_FOR_E.replace(fixPlusNoise(text), "e"), "i")
 
     /** Greek and Cyrillic letters that look like Latin ones. */
     private val LOOK_ALIKES: Map<Char, Char> = mapOf(
