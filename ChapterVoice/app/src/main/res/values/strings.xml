@@ -117,6 +117,8 @@
     <string name="setting_paragraph_pause">Paus mellan stycken: %1$d ms</string>
     <string name="setting_sentence_pause">Extra paus mellan meningar: %1$d ms</string>
     <string name="setting_sentence_pause_off">Extra paus mellan meningar: av (rösten bestämmer)</string>
+    <string name="setting_engine">Motor för talsyntes</string>
+    <string name="engine_default">Telefonens standard (%1$s)</string>
     <string name="setting_language">Språk för uppläsning</string>
     <string name="language_auto">Automatiskt (efter sidans språk)</string>
     <string name="setting_voice">Röst för %1$s</string>

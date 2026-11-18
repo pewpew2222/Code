@@ -38,26 +38,58 @@ private val LANGUAGES = listOf("auto", "en", "sv", "zh", "ko", "ja")
 internal fun VoiceSettings(settings: AppSettings, onChanged: () -> Unit) {
     val context = LocalContext.current
     var language by remember { mutableStateOf(settings.ttsLanguage) }
-    var voices by remember { mutableStateOf<List<Voice>>(emptyList()) }
-    var ready by remember { mutableStateOf(false) }
+    var engine by remember { mutableStateOf(settings.ttsEngine) }
+    var engines by remember { mutableStateOf<List<TextToSpeech.EngineInfo>>(emptyList()) }
+    var voices by remember(engine) { mutableStateOf<List<Voice>>(emptyList()) }
+    var ready by remember(engine) { mutableStateOf(false) }
+    var showEngines by remember { mutableStateOf(false) }
 
-    // A separate TTS instance, only to list voices and play the sample.
-    val tts = remember {
+    // A separate TTS instance of the chosen engine, only to list voices and play the sample.
+    val tts = remember(engine) {
         var instance: TextToSpeech? = null
-        instance = TextToSpeech(context) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                voices = runCatching { instance?.voices?.toList().orEmpty() }.getOrDefault(emptyList())
-                ready = true
+        instance = TextToSpeech(context, { status ->
+            val current = instance
+            if (status == TextToSpeech.SUCCESS && current != null) {
+                voices = runCatching { current.voices?.toList().orEmpty() }.getOrDefault(emptyList())
+                engines = runCatching { current.engines.orEmpty() }.getOrDefault(emptyList())
             }
-        }
+            ready = true
+        }, engine.ifEmpty { null })
         instance
     }
-    DisposableEffect(Unit) { onDispose { tts.shutdown() } }
+    DisposableEffect(tts) { onDispose { tts.shutdown() } }
+
+    // ------------------------------------------------------------ engine
+    Text(stringResource(R.string.setting_engine), fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 4.dp))
+    val defaultEngine = runCatching { tts.defaultEngine }.getOrNull().orEmpty()
+    fun engineLabel(pkg: String): String = engines.firstOrNull { it.name == pkg }?.label ?: pkg
+    Box {
+        OutlinedButton(onClick = { showEngines = true }, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                if (engine.isEmpty()) stringResource(R.string.engine_default, engineLabel(defaultEngine))
+                else engineLabel(engine),
+            )
+        }
+        DropdownMenu(expanded = showEngines, onDismissRequest = { showEngines = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.engine_default, engineLabel(defaultEngine))) },
+                onClick = { engine = ""; settings.ttsEngine = ""; showEngines = false; onChanged() },
+            )
+            engines.forEach { info ->
+                DropdownMenuItem(
+                    text = { Text(info.label) },
+                    onClick = { engine = info.name; settings.ttsEngine = info.name; showEngines = false; onChanged() },
+                )
+            }
+        }
+    }
 
     // "Automatic" picks voices for English, the most common language of web novels.
     val voiceLanguage = if (language == "auto") "en" else language
+    // Engines that report no voice for the language (or odd language codes) show all their voices.
     val languageVoices = voices
-        .filter { it.locale.language == Locale.forLanguageTag(voiceLanguage).language }
+        .filter { sameLanguage(it.locale, voiceLanguage) }
+        .ifEmpty { voices }
         .sortedWith(compareBy({ it.isNetworkConnectionRequired }, { it.locale.toLanguageTag() }, { it.name }))
     var voiceName by remember(voiceLanguage) { mutableStateOf(settings.ttsVoice(voiceLanguage)) }
     var showVoices by remember { mutableStateOf(false) }
@@ -135,6 +167,13 @@ internal fun VoiceSettings(settings: AppSettings, onChanged: () -> Unit) {
             }) { Text(stringResource(R.string.voice_try)) }
         }
     }
+}
+
+/** "en" matches voices tagged "en-US" and engines that use three letters ("eng"). */
+private fun sameLanguage(locale: Locale, tag: String): Boolean {
+    val wanted = Locale.forLanguageTag(tag)
+    if (locale.language.equals(wanted.language, ignoreCase = true)) return true
+    return runCatching { locale.isO3Language.equals(wanted.isO3Language, ignoreCase = true) }.getOrDefault(false)
 }
 
 private fun languageName(tag: String): String {

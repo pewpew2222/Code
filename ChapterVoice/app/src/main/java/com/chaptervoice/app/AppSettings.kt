@@ -56,6 +56,11 @@ class AppSettings(context: Context) {
         get() = prefs.getBoolean("delete_after_read", true)
         set(value) = prefs.edit().putBoolean("delete_after_read", value).apply()
 
+    /** TTS engine package, e.g. SherpaTTS ("" = the phone's default engine). */
+    var ttsEngine: String
+        get() = prefs.getString("tts_engine", "") ?: ""
+        set(value) = prefs.edit().putString("tts_engine", value).apply()
+
     /** "auto" (from the page) or a language tag like "en". */
     var ttsLanguage: String
         get() = prefs.getString("tts_language", "auto") ?: "auto"

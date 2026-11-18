@@ -156,7 +156,18 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
             isActive = true
         }
 
-        tts = TextToSpeech(this, this)
+        createTts()
+    }
+
+    /** The engine package in use ("" = the phone's default engine). */
+    private var currentEngine = ""
+
+    /** Set when the engine was switched mid-chapter, to continue once the new one is ready. */
+    private var resumeAfterEngineSwitch = false
+
+    private fun createTts() {
+        currentEngine = settings.ttsEngine
+        tts = TextToSpeech(this, this, currentEngine.ifEmpty { null })
         tts.setAudioAttributes(
             AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -190,6 +201,11 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         }
         ttsReady = true
         applyVoiceSettings()
+        if (resumeAfterEngineSwitch) {
+            resumeAfterEngineSwitch = false
+            applyLanguage(chapter)
+            if (playing && pieces.isNotEmpty()) speakFrom(index)
+        }
         afterTtsReady?.invoke()
         afterTtsReady = null
     }
@@ -446,6 +462,15 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
     }
 
     private fun onSettingsChanged() {
+        if (settings.ttsEngine != currentEngine) {
+            // A different engine (e.g. SherpaTTS): replace the TTS instance and continue.
+            generation++
+            ttsReady = false
+            resumeAfterEngineSwitch = true
+            runCatching { tts.stop(); tts.shutdown() }
+            createTts()
+            return
+        }
         if (!ttsReady) return
         applyVoiceSettings()
         applyLanguage(chapter)
