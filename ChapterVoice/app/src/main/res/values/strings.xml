@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ChapterVoice</string>
+    <string name="channel_name">Uppläsning</string>
+
+    <string name="address_hint">Adress eller sökning</string>
+    <string name="settings">Inställningar</string>
+    <string name="done">Klar</string>
+    <string name="read_this_page">Läs upp den här sidan</string>
+    <string name="read_this_page_instead">Läs upp sidan som visas i stället</string>
+
+    <string name="action_play">Spela</string>
+    <string name="action_pause">Pausa</string>
+    <string name="action_restart_chapter">Starta om kapitlet</string>
+    <string name="action_prev_paragraph">Föregående stycke</string>
+    <string name="action_next_paragraph">Nästa stycke</string>
+    <string name="action_next_chapter">Nästa kapitel</string>
+    <string name="action_stop">Stoppa</string>
+
+    <string name="status_loading">Hämtar kapitel…</string>
+    <string name="status_position">Stycke %1$d av %2$d</string>
+    <string name="status_chapters_read">%1$d kapitel lästa</string>
+
+    <string name="message_chapter_done">Kapitlet är slut.</string>
+    <string name="message_no_next_found">Hittade inget nästa kapitel.</string>
+    <string name="message_no_more_chapters">Det verkar inte finnas fler kapitel.</string>
+    <string name="message_limit_reached">Stoppade efter %1$d kapitel.</string>
+
+    <string name="error_tts_init">Talsyntesen kunde inte starta. Kontrollera att en TTS-motor är installerad.</string>
+    <string name="error_no_text">Hittade ingen text att läsa på sidan.</string>
+    <string name="error_http">Sidan svarade med fel %1$d (finns kapitlet?).</string>
+    <string name="error_offline">Ingen internetanslutning.</string>
+    <string name="error_timeout">Sidan svarade inte i tid.</string>
+    <string name="error_generic">Kunde inte läsa sidan: %1$s</string>
+
+    <string name="menu">Meny</string>
+    <string name="close">Stäng</string>
+    <string name="forward">Framåt</string>
+    <string name="reload">Uppdatera</string>
+    <string name="tab_new">Ny flik</string>
+    <string name="tab_close">Stäng flik</string>
+    <string name="tabs_title">Flikar (%1$d)</string>
+    <string name="tab_reading">Läses upp · %1$s</string>
+    <string name="start_page">Ny flik</string>
+    <string name="open_in_new_tab">Öppna i ny flik</string>
+    <string name="open_in_background_tab">Öppna i bakgrunden</string>
+    <string name="bookmarks">Bokmärken</string>
+    <string name="bookmark_add">Lägg till bokmärke</string>
+    <string name="bookmark_remove">Ta bort bokmärke</string>
+    <string name="bookmarks_empty">Inga bokmärken än. Tryck på stjärnan i adressfältet för att spara en sida. Ett bokmärkt kapitel följer med automatiskt när uppläsningen går vidare till nästa kapitel.</string>
+
+    <string name="history">Historik</string>
+    <string name="history_today">Idag</string>
+    <string name="history_yesterday">Igår</string>
+    <string name="history_search">Sök i historiken</string>
+    <string name="history_remove">Ta bort från historiken</string>
+    <string name="history_clear">Rensa</string>
+    <string name="history_clear_title">Rensa historiken?</string>
+    <string name="history_clear_text">Alla besökta sidor tas bort. Bokmärken och flikar påverkas inte.</string>
+    <string name="history_empty">Ingen historik än.</string>
+    <string name="cancel">Avbryt</string>
+    <string name="no_matches">Inga träffar.</string>
+    <string name="search_sites">Sök webbplatser och bokmärken…</string>
+    <string name="sites_count">%1$d st · A–Ö</string>
+
+    <string name="blocker_title">Reklamblockering på sidan</string>
+    <string name="blocker_summary">%1$s hämtar från %2$d andra domäner. %3$d blockeras.</string>
+    <string name="blocker_hint">Slå på reglaget för att blockera en domän, eller av för att tillåta den. Ladda om sidan för att se ändringen. Annonser som sajten själv levererar tar du bort med "Dölj element".</string>
+    <string name="blocker_disabled">Reklamblockeringen är avstängd i inställningarna.</string>
+    <string name="blocker_empty">Sidan har inte hämtat något från andra domäner än. Ladda om sidan och försök igen.</string>
+    <string name="reload_list">Uppdatera listan</string>
+    <string name="requests_count">%1$d anrop</string>
+    <string name="status_blocked_list">Blockerad (lista)</string>
+    <string name="status_blocked_you">Blockerad av dig</string>
+    <string name="status_allowed_you">Tillåten av dig</string>
+    <string name="status_allowed">Tillåten</string>
+    <string name="hide_element">Dölj element</string>
+    <string name="hidden_elements">%1$d dolda element på den här sajten</string>
+    <string name="hidden_elements_reset">Visa igen</string>
+    <string name="pick_instruction">Tryck på annonsen du vill dölja.</string>
+    <string name="pick_selected">Det röda markerade döljs på hela sajten:</string>
+    <string name="pick_larger">Större</string>
+    <string name="pick_hide">Dölj</string>
+
+    <string name="setting_rate">Hastighet: %1$.1f×</string>
+    <string name="setting_pitch">Tonhöjd: %1$.1f</string>
+    <string name="setting_auto_continue">Fortsätt automatiskt till nästa kapitel</string>
+    <string name="setting_read_title">Läs upp kapitelrubriken</string>
+    <string name="setting_next_mode">Hitta nästa kapitel via</string>
+    <string name="mode_auto">Länken \"Nästa\", annars ändra numret i adressen</string>
+    <string name="mode_link">Bara länken \"Nästa\"</string>
+    <string name="mode_url">Bara ändra numret i adressen (+1)</string>
+    <string name="setting_limit_off">Insomningsstopp: av</string>
+    <string name="setting_limit">Stoppa efter %1$d kapitel</string>
+    <string name="setting_ad_block">Blockera reklam (%1$d domäner)</string>
+    <string name="setting_remove_overlays">Ta bort flytande reklamrutor (video, popup-notiser)</string>
+    <string name="setting_preload">Förladda %1$d kapitel framåt när du läser (för offline)</string>
+    <string name="setting_preload_off">Förladdning för offline: av</string>
+    <string name="setting_delete_after_read">Ta bort nedladdade kapitel när de har lästs</string>
+    <string name="downloads_channel">Nedladdningar</string>
+    <string name="downloading">Laddar ner kapitel %1$d av %2$d</string>
+    <string name="downloads">Nedladdat</string>
+    <string name="download_chapters">Ladda ner kapitel…</string>
+    <string name="download_dialog_title">Ladda ner för offline</string>
+    <string name="download_dialog_text">Den här sidan och följande kapitel, totalt %1$d st, sparas så att de kan läsas upp utan internet.</string>
+    <string name="download_start">Ladda ner</string>
+    <string name="downloads_summary">%1$d kapitel · %2$s</string>
+    <string name="downloads_empty">Inga nedladdade kapitel. Öppna ett kapitel och välj ⋮ → Ladda ner kapitel…, eller slå på förladdning i inställningarna.</string>
+    <string name="downloads_delete_all">Ta bort alla</string>
+    <string name="downloads_delete_all_title">Ta bort alla nedladdade kapitel?</string>
+    <string name="downloads_delete_site">Ta bort alla från sajten</string>
+    <string name="downloads_running">Laddar ner %1$d av %2$d: %3$s</string>
+    <string name="downloads_waiting">Väntar på internet…</string>
+    <string name="downloads_finished">Senaste nedladdningen: %1$d av %2$d kapitel klara.</string>
+    <string name="downloads_finished_error">Senaste nedladdningen stannade efter %1$d kapitel: %2$s</string>
+    <string name="delete">Ta bort</string>
+    <string name="setting_paragraph_pause">Paus mellan stycken: %1$d ms</string>
+    <string name="setting_sentence_pause">Extra paus mellan meningar: %1$d ms</string>
+    <string name="setting_sentence_pause_off">Extra paus mellan meningar: av (rösten bestämmer)</string>
+    <string name="setting_language">Språk för uppläsning</string>
+    <string name="language_auto">Automatiskt (efter sidans språk)</string>
+    <string name="setting_voice">Röst för %1$s</string>
+    <string name="voice_default">Standardröst</string>
+    <string name="voice_try">Provlyssna</string>
+    <string name="voice_sample">Så här låter uppläsningen.</string>
+    <string name="voices_loading">Hämtar röster…</string>
+    <string name="voices_none">Ingen röst för %1$s är installerad. Lägg till den under Röst och språk nedan (i TTS-motorns inställningar → Installera röstdata).</string>
+    <string name="error_voice_missing">rösten för %1$s saknas, installera den i TTS-inställningarna</string>
+    <string name="setting_open_tts">Röst och språk (systemets TTS-inställningar)</string>
+</resources>
