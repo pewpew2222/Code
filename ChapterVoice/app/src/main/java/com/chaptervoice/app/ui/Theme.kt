@@ -5,6 +5,9 @@ import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -93,6 +96,15 @@ private fun lightScheme(accent: Accent): ColorScheme = lightColorScheme(
     outlineVariant = Color(0xFFCDD2DA),
 )
 
+/** Rounder corners everywhere, menus included. */
+private val AppShapes = Shapes(
+    extraSmall = RoundedCornerShape(12.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(18.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(28.dp),
+)
+
 @Composable
 fun AppTheme(settings: AppSettings, content: @Composable () -> Unit) {
     val changes by AppSettings.themeChanges.collectAsStateWithLifecycle()
@@ -122,5 +134,5 @@ fun AppTheme(settings: AppSettings, content: @Composable () -> Unit) {
             }
         }
     }
-    MaterialTheme(colorScheme = colors, content = content)
+    MaterialTheme(colorScheme = colors, shapes = AppShapes, content = content)
 }

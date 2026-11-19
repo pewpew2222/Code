@@ -177,6 +177,7 @@ internal fun NowPlayingScreen(
     fun settingsChanged() = command(ReaderService.ACTION_SETTINGS_CHANGED)
     var speed by remember { mutableFloatStateOf(settings.speechRate) }
     var sleepLimit by remember { mutableIntStateOf(settings.chapterLimit) }
+    var sheet by remember { mutableStateOf<String?>(null) }
 
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxSize()) {
         Column(
@@ -326,50 +327,84 @@ internal fun NowPlayingScreen(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                MenuChip(label = stringResource(R.string.chip_speed, formatSpeed(speed))) { close ->
-                    SPEEDS.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(formatSpeed(option) + "×") },
-                            onClick = { speed = option; settings.speechRate = option; settingsChanged(); close() },
-                        )
-                    }
-                }
-                MenuChip(
-                    label = if (sleepLimit == 0) stringResource(R.string.chip_sleep_off)
-                    else stringResource(R.string.chip_sleep, sleepLimit),
-                ) { close ->
-                    SLEEP_CHAPTERS.forEach { count ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(if (count == 0) stringResource(R.string.sleep_off) else stringResource(R.string.setting_limit, count))
-                            },
-                            onClick = { sleepLimit = count; settings.chapterLimit = count; close() },
-                        )
-                    }
-                }
-                MenuChip(
-                    label = stringResource(if (rulesGlobalOn && rulesBookOn) R.string.chip_rules_on else R.string.chip_rules_off),
+                FilterChip(
+                    selected = false,
+                    onClick = { sheet = "speed" },
+                    label = { Text(stringResource(R.string.chip_speed, formatSpeed(speed))) },
+                    leadingIcon = { Icon(painterResource(R.drawable.ic_fast_forward), contentDescription = null, modifier = Modifier.size(18.dp)) },
+                )
+                FilterChip(
+                    selected = sleepLimit > 0,
+                    onClick = { sheet = "sleep" },
+                    label = {
+                        Text(if (sleepLimit == 0) stringResource(R.string.chip_sleep_off) else stringResource(R.string.chip_sleep, sleepLimit))
+                    },
+                )
+                FilterChip(
                     selected = rulesGlobalOn && rulesBookOn,
-                ) { _ ->
-                    Text(
-                        stringResource(R.string.rules_toggle_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).widthIn(max = 260.dp),
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.rules_global)) },
-                        trailingIcon = { Switch(checked = rulesGlobalOn, onCheckedChange = null) },
-                        onClick = { onRulesGlobalChange(!rulesGlobalOn) },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.rules_book)) },
-                        trailingIcon = { Switch(checked = rulesBookOn, onCheckedChange = null) },
-                        enabled = rulesGlobalOn,
-                        onClick = { onRulesBookChange(!rulesBookOn) },
+                    onClick = { sheet = "rules" },
+                    label = { Text(stringResource(if (rulesGlobalOn && rulesBookOn) R.string.chip_rules_on else R.string.chip_rules_off)) },
+                )
+                FilterChip(
+                    selected = false,
+                    onClick = onOpenVoiceSettings,
+                    label = { Text(stringResource(R.string.chip_voice)) },
+                    leadingIcon = { Icon(painterResource(R.drawable.ic_mic), contentDescription = null, modifier = Modifier.size(18.dp)) },
+                )
+            }
+        }
+    }
+
+    when (sheet) {
+        "speed" -> Sheet(stringResource(R.string.label_speed), onDismiss = { sheet = null }) {
+            Text(
+                formatSpeed(speed) + "×",
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+            Slider(
+                value = speed,
+                onValueChange = { speed = (it * 10).roundToInt() / 10f },
+                onValueChangeFinished = { settings.speechRate = speed; settingsChanged() },
+                valueRange = 0.5f..3f,
+            )
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                SPEEDS.forEach { option ->
+                    FilterChip(
+                        selected = speed == option,
+                        onClick = { speed = option; settings.speechRate = option; settingsChanged() },
+                        label = { Text(formatSpeed(option) + "×") },
                     )
                 }
-                FilterChip(selected = false, onClick = onOpenVoiceSettings, label = { Text(stringResource(R.string.chip_voice)) })
+            }
+        }
+        "sleep" -> ChoiceSheet(
+            title = stringResource(R.string.label_sleep),
+            options = SLEEP_CHAPTERS.map { it to if (it == 0) stringResource(R.string.value_off) else stringResource(R.string.setting_limit, it) },
+            selected = sleepLimit,
+            onSelect = { sleepLimit = it; settings.chapterLimit = it },
+            onDismiss = { sheet = null },
+        )
+        "rules" -> Sheet(stringResource(R.string.group_text_rules), onDismiss = { sheet = null }) {
+            Text(
+                stringResource(R.string.rules_toggle_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 12.dp),
+            )
+            Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(18.dp)) {
+                Column {
+                    SwitchRow(stringResource(R.string.rules_global), checked = rulesGlobalOn) { onRulesGlobalChange(it) }
+                    RowDivider()
+                    SwitchRow(stringResource(R.string.rules_book), checked = rulesBookOn, enabled = rulesGlobalOn) { onRulesBookChange(it) }
+                }
             }
         }
     }
@@ -468,18 +503,6 @@ private fun ChapterText(state: ReaderUiState, onReadFrom: (Int) -> Unit) {
 private fun BigControl(@DrawableRes icon: Int, label: Int, onClick: () -> Unit) {
     IconButton(onClick = onClick, modifier = Modifier.size(48.dp)) {
         Icon(painterResource(icon), contentDescription = stringResource(label), modifier = Modifier.size(26.dp))
-    }
-}
-
-/** A chip that opens a small menu. */
-@Composable
-private fun MenuChip(label: String, selected: Boolean = false, content: @Composable (close: () -> Unit) -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    Box {
-        FilterChip(selected = selected, onClick = { open = true }, label = { Text(label) })
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            content { open = false }
-        }
     }
 }
 
