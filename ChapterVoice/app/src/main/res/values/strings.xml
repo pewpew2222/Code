@@ -234,7 +234,7 @@
     <string name="media_video">Video</string>
     <string name="media_gif">GIF</string>
     <string name="media_stream">Ström</string>
-    <string name="media_stream_note">Strömmad video (gråmarkerad) består av många små delar och kan inte sparas som en fil.</string>
+    <string name="media_stream_note">Gråmarkerat kan inte sparas: DRM-skydd, direktsändningar och DASH-strömmar stöds inte än.</string>
     <plurals name="media_found">
         <item quantity="one">%d hittad</item>
         <item quantity="other">%d hittade</item>
@@ -247,4 +247,15 @@
         <item quantity="one">%d nedladdning startad – sparas i Hämtade filer/ChapterVoice</item>
         <item quantity="other">%d nedladdningar startade – sparas i Hämtade filer/ChapterVoice</item>
     </plurals>
+    <string name="stream_drm">Videon är DRM-skyddad och kan inte sparas.</string>
+    <string name="stream_live">Det är en direktsändning, som inte har något slut att spara.</string>
+    <string name="stream_progress">Del %1$d av %2$d</string>
+    <string name="stream_starting">Läser spellistan…</string>
+    <string name="stream_done">Video sparad – tryck för att spela</string>
+    <string name="stream_failed">Kunde inte spara %1$s</string>
+    <string name="stream_best">Bästa</string>
+    <string name="stream_checking">Kollar strömmen…</string>
+    <string name="media_hls">Ström (HLS)</string>
+    <string name="media_dash">Ström (DASH)</string>
+    <string name="stream_encrypted">krypterad</string>
 </resources>

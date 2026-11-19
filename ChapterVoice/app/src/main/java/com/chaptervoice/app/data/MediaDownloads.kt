@@ -8,6 +8,7 @@ import android.os.Environment
 import android.webkit.CookieManager
 import android.webkit.MimeTypeMap
 import android.webkit.WebSettings
+import com.chaptervoice.app.core.Hls
 import com.chaptervoice.app.core.MediaFinder
 import com.chaptervoice.app.core.MediaItem
 import kotlinx.coroutines.Dispatchers
@@ -25,12 +26,23 @@ object MediaDownloads {
     private fun cookies(url: String) = runCatching { CookieManager.getInstance().getCookie(url) }.getOrNull()
 
     /** Starts downloading [items]; returns how many were started. */
-    fun enqueue(context: Context, items: List<MediaItem>, pageUrl: String): Int {
+    fun enqueue(
+        context: Context,
+        items: List<MediaItem>,
+        pageUrl: String,
+        streamChoice: Map<String, String> = emptyMap(),
+        streamName: String? = null,
+    ): Int {
         val manager = context.getSystemService(DownloadManager::class.java) ?: return 0
         val agent = userAgent(context)
         var started = 0
         val usedNames = mutableSetOf<String>()
         items.filter { it.downloadable }.forEach { item ->
+            if (item.isHls) {
+                StreamDownloadWorker.download(context, streamChoice[item.url] ?: item.url, streamName ?: "video", pageUrl)
+                started++
+                return@forEach
+            }
             runCatching {
                 var name = item.fileName
                 var n = 2
@@ -55,6 +67,46 @@ object MediaDownloads {
             }
         }
         return started
+    }
+
+    /** What an HLS stream holds: its qualities, length, and whether it can be saved. */
+    data class StreamInfo(
+        val variants: List<Hls.Variant>,
+        val duration: Double,
+        val encrypted: Boolean,
+        val drm: Boolean,
+        val live: Boolean,
+    ) {
+        val saveable: Boolean get() = !drm && !live
+    }
+
+    suspend fun streamInfo(context: Context, url: String, pageUrl: String): StreamInfo? = withContext(Dispatchers.IO) {
+        runCatching {
+            val text = fetchText(context, url, pageUrl)
+            if (Hls.isMaster(text)) {
+                val variants = Hls.variants(text, url)
+                val best = variants.firstOrNull()?.let { Hls.mediaPlaylist(fetchText(context, it.url, pageUrl), it.url) }
+                StreamInfo(variants, best?.duration ?: 0.0, best?.encrypted == true, best?.drm == true, best?.live == true)
+            } else {
+                val playlist = Hls.mediaPlaylist(text, url)
+                StreamInfo(emptyList(), playlist.duration, playlist.encrypted, playlist.drm, playlist.live)
+            }
+        }.getOrNull()
+    }
+
+    private fun fetchText(context: Context, url: String, pageUrl: String): String {
+        val connection = URL(url).openConnection() as HttpURLConnection
+        connection.connectTimeout = 10_000
+        connection.readTimeout = 10_000
+        connection.setRequestProperty("User-Agent", userAgent(context))
+        connection.setRequestProperty("Referer", pageUrl)
+        cookies(url)?.let { connection.setRequestProperty("Cookie", it) }
+        try {
+            if (connection.responseCode !in 200..299) throw java.io.IOException("HTTP ${connection.responseCode}")
+            return connection.inputStream.use { String(it.readBytes()) }
+        } finally {
+            connection.disconnect()
+        }
     }
 
     /** The size of the file in bytes, if the server tells it. */

@@ -14,8 +14,11 @@ data class MediaItem(
 ) {
     enum class Kind { VIDEO, GIF, STREAM }
 
-    /** Streams (HLS/DASH) are many small pieces, not one file, and cannot be saved as one. */
-    val downloadable: Boolean get() = kind != Kind.STREAM
+    /** An HLS stream (.m3u8): many small pieces that are joined into one video when saved. */
+    val isHls: Boolean get() = kind == Kind.STREAM && MediaFinder.extensionOf(url) == "m3u8"
+
+    /** Files, and HLS streams; DASH streams cannot be saved yet. */
+    val downloadable: Boolean get() = kind != Kind.STREAM || isHls
 
     val fileName: String
         get() {

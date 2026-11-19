@@ -3,6 +3,7 @@ package com.chaptervoice.app.core
 import org.jsoup.Jsoup
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MediaFinderTest {
@@ -37,7 +38,8 @@ class MediaFinderTest {
         )
         assertEquals("https://site.com/v/clip.jpg", items[0].preview)
         assertEquals(640, items[0].width)
-        assertFalse(items[1].downloadable)
+        assertTrue(items[1].isHls && items[1].downloadable)
+        assertFalse(MediaItem("https://a.com/v.mpd", MediaItem.Kind.STREAM).downloadable)
         assertEquals(MediaItem.Kind.GIF, items[2].kind)
         assertEquals("https://site.com/files/movie.jpg", items[4].preview)
         assertEquals("net.mp4", items[7].fileName)
