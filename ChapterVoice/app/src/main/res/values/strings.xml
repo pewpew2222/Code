@@ -35,6 +35,10 @@
     <string name="download_group_info">%1$s · %2$d kapitel · %3$s</string>
     <string name="download_chapter_range">Kap. %1$s</string>
     <string name="downloads_delete_book">Ta bort bokens kapitel</string>
+    <string name="tab_closed">Fliken stängdes</string>
+    <string name="undo">Ångra</string>
+    <string name="tab_open">Öppna fliken</string>
+    <string name="tab_reading_badge">Läses upp</string>
     <string name="library">Bibliotek</string>
     <string name="library_welcome_title">Välkommen!</string>
     <string name="library_welcome_text">Öppna en webbnovell under Webben och tryck på Läs upp. Böckerna du lyssnar på hamnar här, så att du kan fortsätta där du slutade.</string>

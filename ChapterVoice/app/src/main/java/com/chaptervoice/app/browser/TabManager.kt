@@ -1,5 +1,8 @@
 package com.chaptervoice.app.browser
 
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.ImageBitmap
+import android.graphics.Canvas
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
@@ -50,6 +53,25 @@ class BrowserTab internal constructor(
 
     private var view: WebView? = null
 
+    /** A small picture of the page, for the tab overview. Taken when leaving the tab. */
+    var thumbnail by mutableStateOf<ImageBitmap?>(null)
+        internal set
+
+    /** Takes [thumbnail] from what the WebView shows now (if it is on screen). */
+    fun captureThumbnail() {
+        val v = view ?: return
+        if (v.width <= 0 || v.height <= 0 || url.isEmpty()) return
+        runCatching {
+            val scale = THUMBNAIL_SCALE
+            val bitmap = Bitmap.createBitmap((v.width * scale).toInt().coerceAtLeast(1), (v.height * scale).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            canvas.scale(scale, scale)
+            canvas.translate(-v.scrollX.toFloat(), -v.scrollY.toFloat())
+            v.draw(canvas)
+            thumbnail = bitmap.asImageBitmap()
+        }
+    }
+
     /** Hosts the current page requested, with request counts (for the blocker view). */
     val requests = ConcurrentHashMap<String, Int>()
 
@@ -72,6 +94,10 @@ class BrowserTab internal constructor(
     fun goBack() = view?.goBack()
     fun goForward() = view?.goForward()
     fun reload() = view?.reload()
+
+    private companion object {
+        const val THUMBNAIL_SCALE = 0.4f
+    }
 
     internal fun destroy() {
         view?.apply {
@@ -128,10 +154,15 @@ class TabManager(private val context: Context, private val settings: AppSettings
         save()
     }
 
+    /** The last closed tab, so it can be reopened ("Undo"). */
+    private var lastClosed: Triple<Int, BrowserTab, ImageBitmap?>? = null
+
     fun close(id: Long) {
         val index = tabs.indexOfFirst { it.id == id }
         if (index < 0) return
-        tabs[index].destroy()
+        val closing = tabs[index]
+        lastClosed = Triple(index, BrowserTab(nextId++, closing.url, closing.title, ::createWebView), closing.thumbnail)
+        closing.destroy()
         tabs.removeAt(index)
         if (tabs.isEmpty()) {
             newTab()
@@ -140,6 +171,31 @@ class TabManager(private val context: Context, private val settings: AppSettings
         if (activeId == id) activeId = tabs[(index - 1).coerceAtLeast(0)].id
         save()
     }
+
+    /** Brings back the tab closed last, in its old place. */
+    fun reopenLastClosed() {
+        val (index, tab, thumbnail) = lastClosed ?: return
+        lastClosed = null
+        tab.thumbnail = thumbnail
+        // An empty tab made because the last one was closed is replaced.
+        if (tabs.size == 1 && tabs[0].url.isEmpty()) {
+            tabs[0].destroy()
+            tabs.clear()
+        }
+        tabs.add(index.coerceIn(0, tabs.size), tab)
+        save()
+    }
+
+    /** Moves a tab to another place in the list (drag to reorder). */
+    fun move(from: Int, to: Int) {
+        if (from == to || from !in tabs.indices || to !in tabs.indices) return
+        tabs.add(to, tabs.removeAt(from))
+        save()
+    }
+
+    /** The tab next to the active one ([direction] -1 = left, 1 = right), or null. */
+    fun neighbour(direction: Int): BrowserTab? =
+        tabs.getOrNull(tabs.indexOfFirst { it.id == activeId } + direction)
 
     fun destroyAll() = tabs.forEach { it.destroy() }
 

@@ -106,6 +106,22 @@ class ScreenshotTest {
         }
     }
 
+    @Test fun tabsGridDark() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val tabs = com.chaptervoice.app.browser.TabManager(context, settings)
+        val urls = listOf(
+            "https://www.empirenovel.com/novel/complete-martial-arts-attributes/34" to "Complete Martial Arts Attributes - Chapter 34",
+            "https://novelfire.net/book/shadow-slave" to "Shadow Slave - Novel Fire",
+            "https://www.royalroad.com/fiction/1" to "Royal Road",
+            "https://www.novelphoenix.com/" to "Novel Phoenix - Read Light Novels",
+        )
+        val created = urls.map { (url, title) -> tabs.newTab(url).also { it.title = title } }
+        tabs.select(created[1].id)
+        shoot("tabs_grid_dark", dark = true, accent = "pink") {
+            TabsGrid(tabs, readerTabId = created[0].id, reading = true, onOpen = {}, onNewTab = {})
+        }
+    }
+
     @Test fun libraryEmptyLight() = shoot("library_empty_light", dark = false, accent = "green") {
         LibraryScreen(emptyList(), emptyList(), emptyList(), emptyList(), {}, {}, {}, {}, {})
     }

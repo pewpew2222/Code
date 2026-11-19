@@ -61,69 +61,6 @@ import java.util.Calendar
 
 // ------------------------------------------------------------------------ tabs
 
-@Composable
-internal fun TabsOverview(
-    tabs: List<BrowserTab>,
-    activeId: Long,
-    readerTabId: Long,
-    onSelect: (Long) -> Unit,
-    onClose: (Long) -> Unit,
-    onNewTab: () -> Unit,
-) {
-    Surface(Modifier.fillMaxSize()) {
-        Column {
-            Header(stringResource(R.string.tabs_title, tabs.size)) {
-                IconButton(onClick = onNewTab) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.tab_new))
-                }
-            }
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(tabs, key = { it.id }) { tab ->
-                    val isActive = tab.id == activeId
-                    val host = hostOf(tab.url)
-                    Card(
-                        onClick = { onSelect(tab.id) },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer
-                            else MaterialTheme.colorScheme.surfaceVariant,
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            SiteIcon(host, size = 32.dp)
-                            Column(
-                                Modifier
-                                    .weight(1f)
-                                    .padding(start = 12.dp),
-                            ) {
-                                Text(
-                                    text = tab.title.ifBlank { host.ifBlank { stringResource(R.string.start_page) } },
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                                Text(
-                                    text = if (tab.id == readerTabId) stringResource(R.string.tab_reading, host) else host,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            IconButton(onClick = { onClose(tab.id) }) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.tab_close))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 // ------------------------------------------------------------------------ bookmarks
 
 @Composable

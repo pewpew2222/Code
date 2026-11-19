@@ -1,5 +1,13 @@
 package com.chaptervoice.app.ui
 
+import kotlinx.coroutines.launch
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.Surface
 import androidx.compose.material3.FilledTonalButton
@@ -95,7 +103,34 @@ fun ReaderScreen(
     var showDownloadDialog by remember { mutableStateOf(false) }
     var bookRulesKey by remember { mutableStateOf<String?>(null) }
 
-    var addressText by remember(active.id, active.url) { mutableStateOf(active.url) }
+    // Swiping the address bar slides the page towards the neighbouring tab.
+    val scope = rememberCoroutineScope()
+    val pageOffset = remember { Animatable(0f) }
+    var pageWidth by remember { mutableStateOf(1f) }
+
+    fun swipePage(dx: Float) {
+        if (overlay != Overlay.NONE) return
+        val direction = if (pageOffset.value + dx < 0) 1 else -1
+        // Resistance when there is no tab on that side.
+        val factor = if (tabs.neighbour(direction) != null) 1f else 0.25f
+        scope.launch { pageOffset.snapTo(pageOffset.value + dx * factor) }
+    }
+
+    fun finishPageSwipe() {
+        scope.launch {
+            val direction = if (pageOffset.value < 0) 1 else -1
+            val target = tabs.neighbour(direction)
+            if (target != null && kotlin.math.abs(pageOffset.value) > pageWidth * 0.25f) {
+                active.captureThumbnail()
+                pageOffset.animateTo(-direction * pageWidth, tween(140))
+                tabs.select(target.id)
+                pageOffset.snapTo(direction * pageWidth)
+                pageOffset.animateTo(0f, spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow))
+            } else {
+                pageOffset.animateTo(0f, spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium))
+            }
+        }
+    }
     val isBookmarked = active.url.isNotEmpty() && bookmarks.any { BookmarkStore.sameUrl(it.url, active.url) }
 
     fun open(url: String, inNewTab: Boolean = false) {
@@ -136,35 +171,22 @@ fun ReaderScreen(
                 .padding(start = 8.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            OutlinedTextField(
-                value = addressText,
-                onValueChange = { addressText = it },
+            AddressBar(
+                url = active.url,
+                bookmarked = isBookmarked,
+                onGo = { open(normalizeAddress(it)) },
+                onToggleBookmark = { bookmarkStore.toggle(active.url, active.title) },
+                onSwipe = { dx -> swipePage(dx) },
+                onSwipeEnd = { finishPageSwipe() },
                 modifier = Modifier.weight(1f),
-                singleLine = true,
-                placeholder = { Text(stringResource(R.string.address_hint)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
-                keyboardActions = KeyboardActions(onGo = {
-                    open(normalizeAddress(addressText))
-                    focusManager.clearFocus()
-                }),
-                trailingIcon = if (active.url.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { bookmarkStore.toggle(active.url, active.title) }) {
-                            Icon(
-                                painterResource(if (isBookmarked) R.drawable.ic_star else R.drawable.ic_star_border),
-                                contentDescription = stringResource(
-                                    if (isBookmarked) R.string.bookmark_remove else R.string.bookmark_add,
-                                ),
-                                tint = if (isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                } else {
-                    null
-                },
             )
-            TabCountButton(count = tabs.tabs.size) {
-                overlay = if (overlay == Overlay.TABS) Overlay.NONE else Overlay.TABS
+            TabCounter(count = tabs.tabs.size) {
+                if (overlay == Overlay.TABS) {
+                    overlay = Overlay.NONE
+                } else {
+                    active.captureThumbnail()
+                    overlay = Overlay.TABS
+                }
             }
             Box {
                 IconButton(onClick = { showMenu = true }) {
@@ -233,14 +255,22 @@ fun ReaderScreen(
         }
 
         // ------------------------------------------------------------ content
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+        Box(
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .onGloballyPositioned { pageWidth = it.size.width.toFloat().coerceAtLeast(1f) }
+                .graphicsLayer {
+                    translationX = pageOffset.value
+                    alpha = 1f - (kotlin.math.abs(pageOffset.value) / pageWidth * 0.5f).coerceIn(0f, 0.5f)
+                },
+        ) {
             when {
-                overlay == Overlay.TABS -> TabsOverview(
-                    tabs = tabs.tabs,
-                    activeId = tabs.activeId,
+                overlay == Overlay.TABS -> TabsGrid(
+                    tabs = tabs,
                     readerTabId = nav.readerTabId,
-                    onSelect = { tabs.select(it); overlay = Overlay.NONE },
-                    onClose = { tabs.close(it) },
+                    reading = state.status != ReaderStatus.IDLE,
+                    onOpen = { tabs.select(it); overlay = Overlay.NONE },
                     onNewTab = { tabs.newTab(); overlay = Overlay.NONE },
                 )
                 overlay == Overlay.BOOKMARKS -> BookmarksList(
@@ -370,24 +400,6 @@ private fun ActiveWebView(tab: BrowserTab) {
         },
         onRelease = { container -> container.removeAllViews() },
     )
-}
-
-@Composable
-private fun TabCountButton(count: Int, onClick: () -> Unit) {
-    IconButton(onClick = onClick) {
-        Box(
-            Modifier
-                .size(24.dp)
-                .border(2.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(5.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = if (count > 99) "∞" else count.toString(),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-    }
 }
 
 /** Reads the page as the browser shows it (works on sites with bot checks and scripts). */
