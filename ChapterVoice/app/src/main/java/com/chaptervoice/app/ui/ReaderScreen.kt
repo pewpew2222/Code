@@ -1,5 +1,12 @@
 package com.chaptervoice.app.ui
 
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.combinedClickable
+import com.chaptervoice.app.data.BookStore
 import kotlinx.coroutines.launch
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.graphicsLayer
@@ -103,6 +110,11 @@ fun ReaderScreen(
     var showDownloadDialog by remember { mutableStateOf(false) }
     var bookRulesKey by remember { mutableStateOf<String?>(null) }
 
+    var editingAddress by remember { mutableStateOf(false) }
+    var addressQuery by remember { mutableStateOf("") }
+    var showTabHistory by remember { mutableStateOf(false) }
+    val books by remember { BookStore.get(context) }.items.collectAsStateWithLifecycle()
+
     // Swiping the address bar slides the page towards the neighbouring tab.
     val scope = rememberCoroutineScope()
     val pageOffset = remember { Animatable(0f) }
@@ -138,6 +150,10 @@ fun ReaderScreen(
         if (inNewTab) tabs.newTab(url) else active.load(url)
     }
 
+    BackHandler(enabled = editingAddress) {
+        editingAddress = false
+        focusManager.clearFocus()
+    }
     BackHandler(enabled = overlay != Overlay.NONE) { overlay = Overlay.NONE }
     BackHandler(enabled = overlay == Overlay.NONE && tabs.pickTabId == active.id) { tabs.cancelPick() }
     BackHandler(enabled = overlay == Overlay.NONE && active.canGoBack) { active.goBack() }
@@ -176,8 +192,16 @@ fun ReaderScreen(
                 .padding(start = 8.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            BackButton(
+                enabled = active.canGoBack,
+                onBack = { active.goBack() },
+                onShowHistory = { showTabHistory = true },
+            )
             AddressBar(
                 url = active.url,
+                editing = editingAddress,
+                onEditingChange = { editingAddress = it },
+                onQueryChange = { addressQuery = it },
                 bookmarked = isBookmarked,
                 onGo = { open(normalizeAddress(it)) },
                 onToggleBookmark = { bookmarkStore.toggle(active.url, active.title) },
@@ -271,6 +295,14 @@ fun ReaderScreen(
                 },
         ) {
             when {
+                editingAddress -> SuggestionList(
+                    suggestions = suggestionsFor(addressQuery, history, bookmarks, books) { normalizeAddress(it) },
+                    onPick = { url ->
+                        editingAddress = false
+                        focusManager.clearFocus()
+                        open(url)
+                    },
+                )
                 overlay == Overlay.TABS -> TabsGrid(
                     tabs = tabs,
                     readerTabId = nav.readerTabId,
@@ -321,7 +353,7 @@ fun ReaderScreen(
                             onCancel = { tabs.cancelPick() },
                         )
                     }
-                    ActiveWebView(active)
+                    BrowserPage(active)
                 }
             }
         }
@@ -362,6 +394,35 @@ fun ReaderScreen(
         )
     }
 
+    if (showTabHistory) {
+        val (pages, current) = remember(active.id, active.url) { active.backForwardList() }
+        Sheet(stringResource(R.string.tab_history), onDismiss = { showTabHistory = false }) {
+            if (pages.isEmpty()) Text(stringResource(R.string.history_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            pages.withIndex().reversed().forEach { (i, page) ->
+                val (title, url) = page
+                val isCurrent = i == current
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent)
+                        .pressable(onClick = {
+                            showTabHistory = false
+                            if (!isCurrent) active.goBackOrForward(i - current)
+                        })
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    SiteIcon(hostOf(url), size = 22.dp)
+                    Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                        Text(title.ifBlank { url }, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal)
+                        Text(hostOf(url), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+
     bookRulesKey?.let { key ->
         BookRulesDialog(
             settings = settings,
@@ -386,27 +447,6 @@ fun ReaderScreen(
 
 }
 
-/** Shows the active tab's WebView, moving it into place when the tab changes. */
-@Composable
-private fun ActiveWebView(tab: BrowserTab) {
-    AndroidView(
-        factory = { FrameLayout(it) },
-        modifier = Modifier.fillMaxSize(),
-        update = { container ->
-            val webView = tab.webView
-            if (container.getChildAt(0) !== webView) {
-                container.removeAllViews()
-                (webView.parent as? ViewGroup)?.removeView(webView)
-                container.addView(
-                    webView,
-                    FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
-                )
-            }
-        },
-        onRelease = { container -> container.removeAllViews() },
-    )
-}
-
 /** Reads the page as the browser shows it (works on sites with bot checks and scripts). */
 private fun readCurrentPage(context: Context, webView: WebView) {
     val url = webView.url ?: return
@@ -427,5 +467,29 @@ private fun normalizeAddress(input: String): String {
         text.startsWith("http://") || text.startsWith("https://") -> text
         text.contains('.') && !text.contains(' ') -> "https://$text"
         else -> "https://www.google.com/search?q=" + java.net.URLEncoder.encode(text, "UTF-8")
+    }
+}
+
+/** Back arrow: tap to go back, hold to see the tab's recent pages. */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun BackButton(enabled: Boolean, onBack: () -> Unit, onShowHistory: () -> Unit) {
+    Box(
+        Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .combinedClickable(
+                onClickLabel = stringResource(R.string.back),
+                onLongClickLabel = stringResource(R.string.tab_history),
+                onClick = { if (enabled) onBack() },
+                onLongClick = onShowHistory,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = stringResource(R.string.back),
+            tint = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+        )
     }
 }

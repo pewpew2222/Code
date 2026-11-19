@@ -11,15 +11,19 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
 import com.chaptervoice.app.browser.TabManager
+import com.chaptervoice.app.data.Shortcuts
 import com.chaptervoice.app.ui.AppTheme
 import com.chaptervoice.app.ui.AppRoot
 
 class MainActivity : ComponentActivity() {
 
-    /** A URL shared to the app from another app (e.g. a browser). */
     private lateinit var tabs: TabManager
 
+    /** A URL shared to the app from another app (e.g. a browser). */
     private val incomingUrl = mutableStateOf<String?>(null)
+
+    /** A chapter to continue, from an app icon shortcut. */
+    private val continueUrl = mutableStateOf<String?>(null)
 
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* optional */ }
@@ -42,6 +46,8 @@ class MainActivity : ComponentActivity() {
                     tabs = tabs,
                     incomingUrl = incomingUrl.value,
                     onIncomingUrlHandled = { incomingUrl.value = null },
+                    continueUrl = continueUrl.value,
+                    onContinueHandled = { continueUrl.value = null },
                 )
             }
         }
@@ -63,6 +69,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
+        if (intent?.action == Shortcuts.ACTION_CONTINUE) {
+            continueUrl.value = intent.getStringExtra(Shortcuts.EXTRA_URL)
+            return
+        }
         val text = when (intent?.action) {
             Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)
             Intent.ACTION_VIEW -> intent.dataString

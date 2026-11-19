@@ -68,6 +68,22 @@ class NextChapterResolverTest {
     }
 
     @Test
+    fun findsPreviousNextAndChapterList() {
+        val doc = Jsoup.parse(
+            """<a class="btn btn-prev" href="/n/book/33">«</a>
+               <a id="chapter-list" href="/n/book">Table of contents</a>
+               <a rel="next" href="/n/book/35">Next</a>""",
+            "https://s.com/n/book/34",
+        )
+        val links = NextChapterResolver.findChapterLinks(doc, "https://s.com/n/book/34")
+        assertEquals("https://s.com/n/book/33", links.previous)
+        assertEquals("https://s.com/n/book/35", links.next)
+        assertEquals("https://s.com/n/book", links.index)
+        assertTrue(links.isChapterPage)
+        assertFalse(NextChapterResolver.findChapterLinks(Jsoup.parse("<a href='/x'>Home</a>", "https://s.com/"), "https://s.com/").isChapterPage)
+    }
+
+    @Test
     fun urlIncrementModeIgnoresLinks() {
         val doc = Jsoup.parse("""<a href="/elsewhere">Next</a>""", "https://s.com/ch-5")
         assertEquals("https://s.com/ch-6", NextChapterResolver.resolve(doc, "https://s.com/ch-5", NextMode.URL_INCREMENT))

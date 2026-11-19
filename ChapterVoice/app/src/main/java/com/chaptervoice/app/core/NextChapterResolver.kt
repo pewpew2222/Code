@@ -61,6 +61,55 @@ object NextChapterResolver {
         return null
     }
 
+    private val PREV_TEXT = Regex(
+        "^(prev|previous|previous chapter|prev chapter|prev chap|previous page|föregående|föregående kapitel|" +
+            "上一章|上一页|上一頁|이전 화|이전화|前へ|前の話|anterior|capítulo anterior|précédent|chapitre précédent|" +
+            "zurück|vorheriges kapitel|«|<|<<|←|‹|« prev|< prev|<< prev|« previous|‹ prev|← prev)$",
+        RegexOption.IGNORE_CASE,
+    )
+    private val PREV_ATTR = Regex(
+        "(^|[-_ ])(prev|prevchap|prev_chap|prev-chap|previous|prevchapter|prev_chapter|prev-chapter|btn-prev|chapter-prev)([-_ ]|$)",
+        RegexOption.IGNORE_CASE,
+    )
+    private val INDEX_TEXT = Regex(
+        "^(index|table of contents|contents|toc|chapter list|chapters|all chapters|chapter index|novel info|" +
+            "kapitellista|innehåll|目录|目錄|章节目录|목차|目次|índice|sommaire)$",
+        RegexOption.IGNORE_CASE,
+    )
+    private val INDEX_ATTR = Regex(
+        "(^|[-_ ])(toc|chapter-list|chapterlist|chapter_list|list-chapter|catalog|btn-list|btn-index|index)([-_ ]|$)",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /** Previous chapter, next chapter and the chapter list, as found on a chapter page. */
+    data class ChapterLinks(val previous: String?, val next: String?, val index: String?) {
+        /** The page has the links of a chapter page (so chapter buttons make sense). */
+        val isChapterPage: Boolean get() = previous != null || next != null
+    }
+
+    fun findChapterLinks(doc: Document, currentUrl: String): ChapterLinks = ChapterLinks(
+        previous = findLink(doc, currentUrl, "prev", PREV_TEXT, PREV_ATTR),
+        next = findNextLink(doc, currentUrl),
+        index = findLink(doc, currentUrl, null, INDEX_TEXT, INDEX_ATTR),
+    )
+
+    private fun findLink(doc: Document, currentUrl: String, rel: String?, text: Regex, attr: Regex): String? {
+        if (rel != null) {
+            doc.select("link[rel=$rel][href], a[rel~=(?i)$rel][href]").forEach { element ->
+                usable(element, currentUrl)?.let { return it }
+            }
+        }
+        val anchors = doc.select("a[href]")
+        anchors.forEach { a ->
+            val label = a.text().trim().ifEmpty { a.attr("title").trim() }
+            if (text.matches(label) || text.matches(a.attr("aria-label").trim())) usable(a, currentUrl)?.let { return it }
+        }
+        anchors.forEach { a ->
+            if (attr.containsMatchIn(a.id()) || attr.containsMatchIn(a.className())) usable(a, currentUrl)?.let { return it }
+        }
+        return null
+    }
+
     private fun usable(element: Element, currentUrl: String): String? {
         val raw = element.attr("href").trim()
         if (raw.isEmpty() || raw.startsWith("#") || raw.startsWith("javascript:", ignoreCase = true)) return null

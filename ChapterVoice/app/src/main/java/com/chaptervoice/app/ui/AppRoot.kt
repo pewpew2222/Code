@@ -44,6 +44,7 @@ import com.chaptervoice.app.data.BookStore
 import com.chaptervoice.app.data.BookmarkStore
 import com.chaptervoice.app.data.OfflineStore
 import com.chaptervoice.app.data.ReadingPositions
+import com.chaptervoice.app.data.Shortcuts
 import com.chaptervoice.app.service.ReaderService
 import com.chaptervoice.app.service.ReaderState
 import com.chaptervoice.app.service.ReaderStatus
@@ -55,6 +56,8 @@ fun AppRoot(
     tabs: TabManager,
     incomingUrl: String?,
     onIncomingUrlHandled: () -> Unit,
+    continueUrl: String? = null,
+    onContinueHandled: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val nav = remember { AppNav() }
@@ -112,6 +115,18 @@ fun AppRoot(
             store.addIfMissing(key, BookNames.guess(key, first.title), first.url, first.title, entries.maxOf { it.savedAt })
         }
     }
+
+    // App icon shortcut "Continue: <book>": read on where it stopped, in the full-screen player.
+    LaunchedEffect(continueUrl) {
+        val url = continueUrl ?: return@LaunchedEffect
+        nav.readerTabId = -1L
+        ReaderService.send(context, ReaderService.ACTION_PLAY_URL, url)
+        nav.playerOpen = true
+        onContinueHandled()
+    }
+
+    // Keep the app icon shortcuts pointing at the most recent books.
+    LaunchedEffect(books) { Shortcuts.update(context, books) }
 
     LaunchedEffect(incomingUrl) {
         if (incomingUrl != null) nav.section = Section.WEB

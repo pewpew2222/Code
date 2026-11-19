@@ -1,5 +1,12 @@
 package com.chaptervoice.app.browser
 
+import org.jsoup.Jsoup
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CoroutineScope
+import com.chaptervoice.app.core.NextChapterResolver
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.ImageBitmap
 import android.graphics.Canvas
@@ -52,6 +59,20 @@ class BrowserTab internal constructor(
         internal set
 
     private var view: WebView? = null
+
+    /** Previous/next chapter and chapter list links of the page, when it is a chapter. */
+    var chapterLinks by mutableStateOf<NextChapterResolver.ChapterLinks?>(null)
+        internal set
+
+    /** The tab's recent pages (title, address), oldest first, and which one is shown. */
+    fun backForwardList(): Pair<List<Pair<String, String>>, Int> {
+        val list = view?.copyBackForwardList() ?: return emptyList<Pair<String, String>>() to -1
+        val items = (0 until list.size).map { i -> list.getItemAtIndex(i).let { (it.title.orEmpty()) to it.url } }
+        return items to list.currentIndex
+    }
+
+    /** Moves [steps] pages back (negative) or forward (positive) in the tab's history. */
+    fun goBackOrForward(steps: Int) = view?.goBackOrForward(steps)
 
     /** A small picture of the page, for the tab overview. Taken when leaving the tab. */
     var thumbnail by mutableStateOf<ImageBitmap?>(null)
@@ -130,6 +151,18 @@ class TabManager(private val context: Context, private val settings: AppSettings
     private val prefs = context.getSharedPreferences("tabs", Context.MODE_PRIVATE)
     private var nextId = 1L
     private val history = HistoryStore.get(context)
+    private val background = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** Reads the page's previous/next/chapter list links, for the chapter buttons. */
+    private fun findChapterLinks(tab: BrowserTab, view: WebView, url: String) {
+        view.evaluateJavascript("(function(){return document.documentElement.outerHTML;})()") { result ->
+            val html = decode(result) ?: return@evaluateJavascript
+            background.launch {
+                val links = runCatching { NextChapterResolver.findChapterLinks(Jsoup.parse(html, url), url) }.getOrNull()
+                withContext(Dispatchers.Main) { if (tab.url == url) tab.chapterLinks = links }
+            }
+        }
+    }
 
     init {
         restore()
@@ -317,6 +350,7 @@ class TabManager(private val context: Context, private val settings: AppSettings
             override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
                 tab.url = url
                 tab.requests.clear()
+                tab.chapterLinks = null
                 if (pickTabId == tab.id) cancelPick()
             }
 
@@ -333,6 +367,7 @@ class TabManager(private val context: Context, private val settings: AppSettings
                 tab.canGoForward = view.canGoForward()
                 history.record(url, view.title.orEmpty())
                 save()
+                findChapterLinks(tab, view, url)
             }
 
             override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
