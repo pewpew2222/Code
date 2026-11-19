@@ -123,6 +123,31 @@ object NextChapterResolver {
     private fun sameUrl(a: String, b: String): Boolean =
         a.substringBefore('#').trimEnd('/') == b.substringBefore('#').trimEnd('/')
 
+    private val CHAPTER_IN_TITLE = Regex("(?:chapter|chap|ch|episode|ep|kapitel)\\.?\\s*(\\d+)", RegexOption.IGNORE_CASE)
+
+    /** The chapter number in a title like "Chapter 34: The Bird", or null. */
+    fun chapterNumberIn(title: String): Int? = CHAPTER_IN_TITLE.find(title)?.groupValues?.get(1)?.toIntOrNull()
+
+    /**
+     * The address of chapter [number], made by replacing the chapter number in [url].
+     * When [currentChapter] is known, the number in the address with that value is the
+     * one replaced (so "…/chapter-111-103" works); otherwise the last number is.
+     * Returns null when the address has no number after the host.
+     */
+    fun urlForChapter(url: String, number: Int, currentChapter: Int? = null): String? {
+        val schemeEnd = url.indexOf("://")
+        val pathStart = if (schemeEnd >= 0) url.indexOf('/', schemeEnd + 3) else 0
+        if (pathStart < 0) return null
+        val fragmentStart = url.indexOf('#').let { if (it < 0) url.length else it }
+        val runs = Regex("\\d+").findAll(url.substring(pathStart, fragmentStart)).toList()
+        if (runs.isEmpty()) return null
+        val run = currentChapter?.let { current -> runs.lastOrNull { it.value.toIntOrNull() == current } } ?: runs.last()
+        val digits = run.value
+        val replacement = number.toString().let { if (digits.startsWith("0") && it.length < digits.length) it.padStart(digits.length, '0') else it }
+        val start = pathStart + run.range.first
+        return url.substring(0, start) + replacement + url.substring(pathStart + run.range.last + 1)
+    }
+
     /**
      * Increases the last number in the URL after the host, keeping zero padding.
      * `https://site.com/novel/chapter-009.html` -> `https://site.com/novel/chapter-010.html`.

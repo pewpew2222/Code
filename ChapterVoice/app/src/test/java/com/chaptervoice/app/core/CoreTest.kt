@@ -84,6 +84,23 @@ class NextChapterResolverTest {
     }
 
     @Test
+    fun jumpsToAChapterByNumber() {
+        assertEquals("https://s.com/novel/book/chapter-120", NextChapterResolver.urlForChapter("https://s.com/novel/book/chapter-34", 120))
+        assertEquals("https://s.com/n/chapter-007.html", NextChapterResolver.urlForChapter("https://s.com/n/chapter-034.html", 7))
+        // The number matching the current chapter is replaced, not just the last one.
+        assertEquals(
+            "https://s.com/book/9/chapter-111-150",
+            NextChapterResolver.urlForChapter("https://s.com/book/9/chapter-111-103", 150, currentChapter = 103),
+        )
+        assertEquals(
+            "https://s.com/book/9/chapter-150-103",
+            NextChapterResolver.urlForChapter("https://s.com/book/9/chapter-111-103", 150, currentChapter = 111),
+        )
+        assertNull(NextChapterResolver.urlForChapter("https://s.com/novel/book", 5))
+        assertEquals(34, NextChapterResolver.chapterNumberIn("Chapter 34: Attack Of A Gigantic Bird - Site"))
+    }
+
+    @Test
     fun urlIncrementModeIgnoresLinks() {
         val doc = Jsoup.parse("""<a href="/elsewhere">Next</a>""", "https://s.com/ch-5")
         assertEquals("https://s.com/ch-6", NextChapterResolver.resolve(doc, "https://s.com/ch-5", NextMode.URL_INCREMENT))

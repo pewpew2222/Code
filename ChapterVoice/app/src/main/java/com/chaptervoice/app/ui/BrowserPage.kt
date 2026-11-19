@@ -1,5 +1,14 @@
 package com.chaptervoice.app.ui
 
+import com.chaptervoice.app.core.NextChapterResolver
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.mutableStateOf
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.animation.AnimatedVisibility
@@ -71,6 +80,7 @@ import kotlin.math.roundToInt
  */
 @Composable
 internal fun BrowserPage(tab: BrowserTab) {
+    var chapterSheet by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
         RefreshableWebView(tab)
 
@@ -92,15 +102,71 @@ internal fun BrowserPage(tab: BrowserTab) {
             if (links != null) {
                 ChapterButtons(
                     onPrevious = links.previous?.let { { tab.load(it) } },
-                    onIndex = {
-                        // The page's own chapter list link, else the book's page (the address without the chapter).
-                        val target = links.index ?: BookKey.of(tab.url)?.let { tab.url.substringBefore("://") + "://" + it }
-                        if (target != null) tab.load(target)
-                    },
+                    onIndex = { chapterSheet = true },
                     onNext = links.next?.let { { tab.load(it) } },
                 )
             }
         }
+    }
+    if (chapterSheet) ChapterSheet(tab, onDismiss = { chapterSheet = false })
+}
+
+/** "Chapter list" sheet: open the list, or jump straight to a chapter number. */
+@Composable
+private fun ChapterSheet(tab: BrowserTab, onDismiss: () -> Unit) {
+    val links = tab.chapterLinks
+    val current = NextChapterResolver.chapterNumberIn(tab.title)
+    var number by remember { mutableStateOf(current?.toString().orEmpty()) }
+    var error by remember { mutableStateOf(false) }
+    val focus = LocalFocusManager.current
+
+    fun jump() {
+        val target = number.toIntOrNull()?.let { NextChapterResolver.urlForChapter(tab.url, it, current) }
+        if (target == null) {
+            error = true
+            return
+        }
+        focus.clearFocus()
+        onDismiss()
+        tab.load(target)
+    }
+
+    Sheet(stringResource(R.string.chapter_list), onDismiss) {
+        Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(18.dp)) {
+            ValueRow(stringResource(R.string.open_chapter_list), hostOf(tab.url), onClick = {
+                // The page's own chapter list link, else the book's page (the address without the chapter).
+                val target = links?.index ?: BookKey.of(tab.url)?.let { tab.url.substringBefore("://") + "://" + it }
+                onDismiss()
+                if (target != null) tab.load(target)
+            })
+        }
+        Text(
+            stringResource(R.string.jump_to_chapter),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = 20.dp, bottom = 8.dp),
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = number,
+                onValueChange = { value -> number = value.filter { it.isDigit() }.take(6); error = false },
+                singleLine = true,
+                label = { Text(stringResource(R.string.chapter_number)) },
+                isError = error,
+                supportingText = if (error) { { Text(stringResource(R.string.jump_failed)) } } else null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Go),
+                keyboardActions = KeyboardActions(onGo = { jump() }),
+                modifier = Modifier.weight(1f),
+            )
+            Button(onClick = { jump() }, enabled = number.isNotEmpty(), modifier = Modifier.padding(start = 12.dp)) {
+                Text(stringResource(R.string.go))
+            }
+        }
+        Text(
+            stringResource(R.string.jump_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp),
+        )
     }
 }
 

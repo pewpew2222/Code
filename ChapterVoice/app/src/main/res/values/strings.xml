@@ -49,6 +49,12 @@
     <string name="suggestion_search">Sök efter \"%1$s\"</string>
     <string name="suggestion_continue_book">Fortsätt i boken</string>
     <string name="shortcut_continue">Fortsätt: %1$s</string>
+    <string name="open_chapter_list">Öppna kapitellistan</string>
+    <string name="jump_to_chapter">Hoppa till kapitel</string>
+    <string name="chapter_number">Kapitelnummer</string>
+    <string name="go">Gå</string>
+    <string name="jump_failed">Adressen innehåller inget kapitelnummer att byta.</string>
+    <string name="jump_hint">Byter kapitelnumret i adressen. Fungerar på sajter där adressen innehåller kapitlets nummer.</string>
     <string name="library">Bibliotek</string>
     <string name="library_welcome_title">Välkommen!</string>
     <string name="library_welcome_text">Öppna en webbnovell under Webben och tryck på Läs upp. Böckerna du lyssnar på hamnar här, så att du kan fortsätta där du slutade.</string>
