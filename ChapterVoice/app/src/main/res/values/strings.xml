@@ -127,6 +127,11 @@
     <string name="pronunciation_from">Ord i texten</string>
     <string name="pronunciation_to">Läs som</string>
     <string name="pronunciation_add">Lägg till regel</string>
+    <string name="rules_toggle">Textregler</string>
+    <string name="rules_toggle_hint">Av = texten läses precis som den står (ingen censurrättning, inga filter eller uttalsregler). Inga regler tas bort.</string>
+    <string name="rules_global">Textregler i hela appen</string>
+    <string name="rules_book">Textregler för den här boken</string>
+    <string name="rules_off_status">textregler av</string>
     <string name="book_rules_title">Uttalsregler för boken</string>
     <string name="book_rules_hint">Gäller bara den här boken (alla dess kapitel) och används före de allmänna reglerna.</string>
     <string name="book_rules_list">Böcker med egna regler</string>

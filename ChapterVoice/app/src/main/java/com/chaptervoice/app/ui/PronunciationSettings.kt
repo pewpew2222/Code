@@ -17,6 +17,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +40,20 @@ internal fun PronunciationSettings(settings: AppSettings, onChanged: () -> Unit)
     var numberRule by remember { mutableStateOf(settings.numberRule) }
     var books by remember { mutableStateOf(settings.booksWithRules()) }
     var editingBook by remember { mutableStateOf<String?>(null) }
+    val switches by AppSettings.rulesSwitches.collectAsState()
+    val globalOn = remember(switches) { settings.textRulesEnabled }
+
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.rules_global), fontWeight = FontWeight.SemiBold)
+            Text(
+                stringResource(R.string.rules_toggle_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(checked = globalOn, onCheckedChange = { settings.textRulesEnabled = it; onChanged() })
+    }
 
     Text(stringResource(R.string.setting_pronunciation), fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 4.dp))
     Text(
@@ -96,6 +111,8 @@ internal fun PronunciationSettings(settings: AppSettings, onChanged: () -> Unit)
 @Composable
 internal fun BookRulesDialog(settings: AppSettings, bookKey: String, onChanged: () -> Unit, onDismiss: () -> Unit) {
     var rules by remember(bookKey) { mutableStateOf(settings.bookRules(bookKey)) }
+    val switches by AppSettings.rulesSwitches.collectAsState()
+    val bookOn = remember(switches, bookKey) { settings.bookRulesEnabled(bookKey) }
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done)) } },
@@ -109,6 +126,10 @@ internal fun BookRulesDialog(settings: AppSettings, bookKey: String, onChanged: 
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp),
                 )
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.rules_book), modifier = Modifier.weight(1f))
+                    Switch(checked = bookOn, onCheckedChange = { settings.setBookRulesEnabled(bookKey, it); onChanged() })
+                }
                 RuleEditor(rules) { newRules ->
                     rules = newRules
                     settings.setBookRules(bookKey, newRules)

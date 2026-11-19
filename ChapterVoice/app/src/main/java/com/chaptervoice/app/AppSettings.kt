@@ -3,12 +3,19 @@ package com.chaptervoice.app
 import android.content.Context
 import com.chaptervoice.app.core.NextMode
 import com.chaptervoice.app.core.TextCleaner
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
 
 private val DEFAULT_RULES = listOf(TextCleaner.Replacement("exp", "experience"))
 
 class AppSettings(context: Context) {
+
+    companion object {
+        /** Bumped when a text-rules switch changes, so every screen shows the same state. */
+        val rulesSwitches = MutableStateFlow(0)
+    }
+
     private val prefs = context.applicationContext.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
     var speechRate: Float
@@ -80,6 +87,33 @@ class AppSettings(context: Context) {
     var numberRule: Boolean
         get() = prefs.getBoolean("number_rule", true)
         set(value) = prefs.edit().putBoolean("number_rule", value).apply()
+
+    /**
+     * Master switch for all text rules (censor fixes, symbol and emoticon filters,
+     * watermark removal, pronunciation rules). Off = read the text exactly as written.
+     * Only a switch: the rules themselves are never touched.
+     */
+    var textRulesEnabled: Boolean
+        get() = prefs.getBoolean("text_rules_enabled", true)
+        set(value) {
+            prefs.edit().putBoolean("text_rules_enabled", value).apply()
+            rulesSwitches.value++
+        }
+
+    /** The same switch for one book; off means that book is read exactly as written. */
+    fun bookRulesEnabled(bookKey: String): Boolean =
+        bookKey !in (prefs.getStringSet("book_rules_off", emptySet()) ?: emptySet())
+
+    fun setBookRulesEnabled(bookKey: String, enabled: Boolean) {
+        val off = (prefs.getStringSet("book_rules_off", emptySet()) ?: emptySet()).toMutableSet()
+        if (enabled) off.remove(bookKey) else off.add(bookKey)
+        prefs.edit().putStringSet("book_rules_off", off).apply()
+        rulesSwitches.value++
+    }
+
+    /** Whether text rules are used for a chapter of [bookKey]. */
+    fun rulesActive(bookKey: String?): Boolean =
+        textRulesEnabled && (bookKey == null || bookRulesEnabled(bookKey))
 
     /** Rules for one book (see BookKey); they apply before the general rules. */
     fun bookRules(bookKey: String): List<TextCleaner.Replacement> =

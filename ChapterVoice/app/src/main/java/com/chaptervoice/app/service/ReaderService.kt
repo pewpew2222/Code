@@ -497,16 +497,29 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
                 index = index.coerceIn(0, pieces.lastIndex)
             }
         }
-        if (playing) speakFrom(index)
+        if (playing) {
+            speakFrom(index)
+        } else if (chapter != null) {
+            // Paused: still refresh the player (e.g. "text rules off").
+            val shown = ReaderState.state.value
+            publishState(shown.status, shown.message)
+        }
     }
 
     /** The chapter as cleaned pieces of text, ready for the TTS engine. */
     private fun buildPieces(loaded: Chapter): List<String> {
-        val pronunciation = settings.pronunciation(BookKey.of(loaded.url))
-        val text = buildList {
+        val bookKey = BookKey.of(loaded.url)
+        val raw = buildList {
             if (settings.readTitle && loaded.heading.isNotBlank()) add(loaded.heading)
             addAll(loaded.paragraphs)
-        }.map { TextCleaner.clean(it, loaded.language, pronunciation) }.filter { it.isNotBlank() }
+        }
+        // With text rules switched off, the text is read exactly as written.
+        val text = if (settings.rulesActive(bookKey)) {
+            val pronunciation = settings.pronunciation(bookKey)
+            raw.map { TextCleaner.clean(it, loaded.language, pronunciation) }
+        } else {
+            raw
+        }.filter { it.isNotBlank() }
         return TextChunker.chunk(text, maxPieceLength())
     }
 
@@ -588,6 +601,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
                 status = status,
                 chapterUrl = current?.url ?: it.chapterUrl,
                 warning = voiceWarning,
+                rulesOff = current != null && !settings.rulesActive(BookKey.of(current.url)),
                 chapterTitle = current?.title,
                 position = if (pieces.isEmpty()) 0 else index + 1,
                 total = pieces.size,

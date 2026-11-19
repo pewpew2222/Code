@@ -78,6 +78,13 @@ fun ReaderScreen(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val state by ReaderState.state.collectAsStateWithLifecycle()
+    val rulesSwitches by AppSettings.rulesSwitches.collectAsStateWithLifecycle()
+    val readingBook = state.chapterUrl?.let { BookKey.of(it) }
+    val rulesGlobalOn = remember(rulesSwitches) { settings.textRulesEnabled }
+    val rulesBookOn = remember(rulesSwitches, readingBook) { readingBook == null || settings.bookRulesEnabled(readingBook) }
+    fun rulesChanged() {
+        if (state.status != ReaderStatus.IDLE) ReaderService.send(context, ReaderService.ACTION_SETTINGS_CHANGED)
+    }
     val bookmarkStore = remember { BookmarkStore.get(context) }
     val bookmarks by bookmarkStore.items.collectAsStateWithLifecycle()
     val positionStore = remember { ReadingPositions.get(context) }
@@ -299,6 +306,10 @@ fun ReaderScreen(
                     readCurrentPage(context, active.webView)
                 }
             },
+            rulesGlobalOn = rulesGlobalOn,
+            rulesBookOn = rulesBookOn,
+            onRulesGlobalChange = { settings.textRulesEnabled = it; rulesChanged() },
+            onRulesBookChange = { on -> readingBook?.let { settings.setBookRulesEnabled(it, on) }; rulesChanged() },
             onGoToPage = {
                 val url = state.chapterUrl
                 if (url != null) {
