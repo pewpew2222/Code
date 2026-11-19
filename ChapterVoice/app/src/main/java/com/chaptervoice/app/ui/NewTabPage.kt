@@ -45,6 +45,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,7 +66,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.chaptervoice.app.AppSettings
 import com.chaptervoice.app.R
+import com.chaptervoice.app.core.DiscoverItem
 import com.chaptervoice.app.data.Book
+import com.chaptervoice.app.data.DiscoverFeed
 import com.chaptervoice.app.data.BookUpdate
 import com.chaptervoice.app.data.HistoryEntry
 import com.chaptervoice.app.data.QuickSites
@@ -111,6 +114,13 @@ internal fun NewTabPage(
 
     LaunchedEffect(Unit) { UpdateChecker.checkIfDue(context) }
 
+    // "Discover more": popular books from the sites of your books.
+    val discoverSites = remember(books) { DiscoverFeed.sitesFor(books) }
+    val discover by DiscoverFeed.state.collectAsState()
+    LaunchedEffect(discoverSites) { DiscoverFeed.refreshIfDue(context, discoverSites) }
+    var preview by remember { mutableStateOf<DiscoverItem?>(null) }
+    var showAll by rememberSaveable { mutableStateOf(false) }
+
     // Most visited sites: the hosts with the most visited pages, pinned ones first.
     val visited = remember(history, pinned, hidden) {
         val counts = history.groupingBy { hostOf(it.url) }.eachCount().filterKeys { it.isNotEmpty() && it !in hidden }
@@ -125,6 +135,16 @@ internal fun NewTabPage(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // ---------------------------------------------------------------- discover
+            item {
+                DiscoverRow(
+                    state = discover,
+                    onPick = { preview = it },
+                    onShowAll = { showAll = true },
+                    onRetry = { DiscoverFeed.refreshIfDue(context, discoverSites, force = true) },
+                )
+            }
+
             // ---------------------------------------------------------------- search
             item {
                 TextField(
@@ -309,6 +329,23 @@ internal fun NewTabPage(
                 }
             }
         }
+    }
+
+    if (showAll) {
+        DiscoverAll(
+            state = discover,
+            onDismiss = { showAll = false },
+            onPick = { preview = it },
+            onRefresh = { DiscoverFeed.refreshIfDue(context, discoverSites, force = true) },
+        )
+    }
+    preview?.let { item ->
+        DiscoverPreview(
+            item = item,
+            onDismiss = { preview = null },
+            onOpen = { showAll = false; onOpen(it) },
+            onReadFirst = { showAll = false; onReadNewChapter(it) },
+        )
     }
 }
 

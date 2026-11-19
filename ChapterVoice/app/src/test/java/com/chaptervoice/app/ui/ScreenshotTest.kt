@@ -132,6 +132,18 @@ class ScreenshotTest {
         val book = Book("empirenovel.com/novel/how-do-we-play", "How Do We Play If This Boss Isnt Nerfed", null, true,
             "https://www.empirenovel.com/novel/how-do-we-play/123", "Chapter 123", 0, caughtUp = true)
         val update = com.chaptervoice.app.data.BookUpdate(book.key, 3, "https://www.empirenovel.com/novel/how-do-we-play/124", "Chapter 124: The Abyss")
+        fun item(title: String, site: String, tags: List<String> = emptyList(), summary: String = "") =
+            com.chaptervoice.app.core.DiscoverItem(title, "https://$site/novel/" + title.lowercase().replace(' ', '-'), null, site, summary, tags)
+        com.chaptervoice.app.data.DiscoverFeed.showOnly(
+            com.chaptervoice.app.data.DiscoverState(
+                sites = listOf("empirenovel.com", "royalroad.com", "scribblehub.com"),
+                items = mapOf(
+                    "empirenovel.com" to listOf(item("Shadow Slave", "empirenovel.com"), item("Lord of Mysteries", "empirenovel.com")),
+                    "royalroad.com" to listOf(item("The Wandering Inn", "royalroad.com"), item("Beware Of Chicken", "royalroad.com")),
+                    "scribblehub.com" to listOf(item("My Vampire System", "scribblehub.com")),
+                ),
+            ),
+        )
         shoot("new_tab_dark", dark = true, accent = "amber") {
             NewTabPage(
                 settings = settings,
