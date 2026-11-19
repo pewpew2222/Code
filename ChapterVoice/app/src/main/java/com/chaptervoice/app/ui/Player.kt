@@ -1,13 +1,27 @@
 package com.chaptervoice.app.ui
 
+import kotlinx.coroutines.delay
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.interaction.DragInteraction
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -140,8 +154,10 @@ private fun miniStatus(state: ReaderUiState): String = when (state.status) {
 private val SPEEDS = listOf(0.8f, 1.0f, 1.2f, 1.4f, 1.6f, 1.8f, 2.0f, 2.5f, 3.0f)
 private val SLEEP_CHAPTERS = listOf(0, 1, 2, 3, 5, 10)
 
-/** The full-screen player: the book, the paragraphs around the one being read, and all controls. */
-@OptIn(ExperimentalLayoutApi::class)
+/** How long the text stays where the user scrolled it before following the reader again. */
+private const val FOLLOW_AFTER_IDLE_MS = 5_000L
+
+/** The full-screen player: the book, the whole chapter text following the reader, and all controls. */
 @Composable
 internal fun NowPlayingScreen(
     state: ReaderUiState,
@@ -153,6 +169,7 @@ internal fun NowPlayingScreen(
     onClose: () -> Unit,
     onGoToPage: () -> Unit,
     onOpenVoiceSettings: () -> Unit,
+    onBookRules: () -> Unit,
 ) {
     val context = LocalContext.current
     val playing = state.status == ReaderStatus.PLAYING
@@ -165,8 +182,8 @@ internal fun NowPlayingScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             // ---------------------------------------------------------------- header
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -180,33 +197,51 @@ internal fun NowPlayingScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f),
                 )
-                IconButton(onClick = onGoToPage, enabled = state.chapterUrl != null) {
-                    Icon(painterResource(R.drawable.ic_open_page), contentDescription = stringResource(R.string.go_to_reading_page))
+                Box {
+                    var menu by remember { mutableStateOf(false) }
+                    IconButton(onClick = { menu = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.menu))
+                    }
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.go_to_reading_page)) },
+                            leadingIcon = { Icon(painterResource(R.drawable.ic_open_page), contentDescription = null) },
+                            enabled = state.chapterUrl != null,
+                            onClick = { menu = false; onGoToPage() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.book_rules_title)) },
+                            enabled = state.chapterUrl != null,
+                            onClick = { menu = false; onBookRules() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.player_stop)) },
+                            leadingIcon = { Icon(painterResource(R.drawable.ic_stop), contentDescription = null) },
+                            onClick = { menu = false; command(ReaderService.ACTION_STOP); onClose() },
+                        )
+                    }
                 }
             }
 
             // ---------------------------------------------------------------- book
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                BookCover(state.bookName ?: state.chapterTitle.orEmpty(), state.coverUrl, 96.dp, 132.dp)
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    state.bookName?.let {
-                        Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                BookCover(state.bookName ?: state.chapterTitle.orEmpty(), state.coverUrl, 52.dp, 72.dp)
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         state.chapterTitle ?: stringResource(R.string.status_loading),
-                        fontSize = 21.sp,
-                        lineHeight = 26.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 3,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                     val host = hostOf(state.chapterUrl.orEmpty())
-                    if (host.isNotEmpty()) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                            SiteIcon(host, size = 16.dp)
-                            Text(host, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
+                    Text(
+                        listOfNotNull(state.bookName, host.ifEmpty { null }).joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             }
 
@@ -217,34 +252,14 @@ internal fun NowPlayingScreen(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
             ) {
                 when (state.status) {
-                    ReaderStatus.LOADING -> Box(contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    ReaderStatus.LOADING -> Box(contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     ReaderStatus.ERROR, ReaderStatus.FINISHED -> Box(Modifier.padding(20.dp)) {
                         Text(
                             state.message.orEmpty(),
                             color = if (state.status == ReaderStatus.ERROR) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                         )
                     }
-                    else -> Column(
-                        Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        if (state.previousText.isNotEmpty()) {
-                            ReadingText(state.previousText, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), maxLines = 3)
-                        }
-                        Box(
-                            Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
-                        ) {
-                            ReadingText(state.currentText, MaterialTheme.colorScheme.onSurface, maxLines = 9)
-                        }
-                        if (state.nextText.isNotEmpty()) {
-                            ReadingText(state.nextText, MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4)
-                        }
-                    }
+                    else -> ChapterText(state, onReadFrom = { ReaderService.seek(context, it) })
                 }
             }
 
@@ -261,6 +276,7 @@ internal fun NowPlayingScreen(
                     },
                     valueRange = 0f..last.toFloat(),
                     enabled = state.total > 1,
+                    modifier = Modifier.height(32.dp),
                 )
                 Row {
                     val shown = dragging?.let { it.roundToInt() + 1 } ?: state.position
@@ -291,22 +307,24 @@ internal fun NowPlayingScreen(
                 FilledIconButton(
                     onClick = { command(ReaderService.ACTION_TOGGLE) },
                     enabled = state.status != ReaderStatus.LOADING,
-                    modifier = Modifier.size(76.dp),
+                    modifier = Modifier.size(64.dp),
                 ) {
                     Icon(
                         painterResource(if (playing) R.drawable.ic_pause else R.drawable.ic_play),
                         contentDescription = stringResource(if (playing) R.string.action_pause else R.string.action_play),
-                        modifier = Modifier.size(34.dp),
+                        modifier = Modifier.size(30.dp),
                     )
                 }
                 BigControl(R.drawable.ic_fast_forward, R.string.action_next_paragraph) { command(ReaderService.ACTION_NEXT_PARAGRAPH) }
                 BigControl(R.drawable.ic_skip_next, R.string.action_next_chapter) { command(ReaderService.ACTION_NEXT_CHAPTER) }
             }
 
-            // ---------------------------------------------------------------- quick settings
-            FlowRow(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            // ---------------------------------------------------------------- quick settings (one swipeable row)
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 MenuChip(label = stringResource(R.string.chip_speed, formatSpeed(speed))) { close ->
                     SPEEDS.forEach { option ->
@@ -329,11 +347,6 @@ internal fun NowPlayingScreen(
                         )
                     }
                 }
-                FilterChip(
-                    selected = false,
-                    onClick = onOpenVoiceSettings,
-                    label = { Text(stringResource(R.string.chip_voice)) },
-                )
                 MenuChip(
                     label = stringResource(if (rulesGlobalOn && rulesBookOn) R.string.chip_rules_on else R.string.chip_rules_off),
                     selected = rulesGlobalOn && rulesBookOn,
@@ -356,32 +369,105 @@ internal fun NowPlayingScreen(
                         onClick = { onRulesBookChange(!rulesBookOn) },
                     )
                 }
+                FilterChip(selected = false, onClick = onOpenVoiceSettings, label = { Text(stringResource(R.string.chip_voice)) })
             }
-            TextButton(
-                onClick = { command(ReaderService.ACTION_STOP); onClose() },
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            ) { Text(stringResource(R.string.player_stop)) }
+        }
+    }
+}
+
+/**
+ * The whole chapter, scrollable. It follows the paragraph being read, except while the
+ * user scrolls: then it stays put until the user has left it alone for
+ * [FOLLOW_AFTER_IDLE_MS], and a button offers to jump back at once. Tapping a paragraph
+ * reads from there.
+ */
+@Composable
+private fun ChapterText(state: ReaderUiState, onReadFrom: (Int) -> Unit) {
+    val listState = rememberLazyListState()
+    val current = (state.position - 1).coerceAtLeast(0)
+    /** When the user last touched or flung the text; 0 = following the reader. */
+    var userScrolledAt by remember { mutableLongStateOf(0L) }
+    var userDragging by remember { mutableStateOf(false) }
+    val density = LocalDensity.current
+    val topMargin = with(density) { 48.dp.roundToPx() }
+
+    // Notice the user's own scrolling (drags, and the fling after a drag).
+    LaunchedEffect(listState) {
+        listState.interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is DragInteraction.Start -> userDragging = true
+                is DragInteraction.Stop, is DragInteraction.Cancel -> {
+                    userDragging = false
+                    userScrolledAt = System.currentTimeMillis()
+                }
+            }
+        }
+    }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }.collect { scrolling ->
+            // A fling keeps going after the finger lifts: count its end as the last touch.
+            if (!scrolling && userScrolledAt != 0L && !userDragging) userScrolledAt = System.currentTimeMillis()
+        }
+    }
+
+    // Follow the reader, but only after the user has left the text alone for a while.
+    LaunchedEffect(current, userScrolledAt, userDragging, state.pieces.size) {
+        if (state.pieces.isEmpty() || userDragging) return@LaunchedEffect
+        if (userScrolledAt != 0L) {
+            val wait = FOLLOW_AFTER_IDLE_MS - (System.currentTimeMillis() - userScrolledAt)
+            if (wait > 0) delay(wait)
+            if (listState.isScrollInProgress) return@LaunchedEffect
+            userScrolledAt = 0L
+        }
+        listState.animateScrollToItem(current.coerceIn(0, state.pieces.lastIndex), -topMargin)
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            itemsIndexed(state.pieces) { index, text ->
+                val isCurrent = index == current
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) else Color.Transparent)
+                        .clickable(onClickLabel = stringResource(R.string.read_from_here)) { onReadFrom(index) }
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                ) {
+                    Text(
+                        text,
+                        fontFamily = ReadingFont,
+                        fontSize = 17.sp,
+                        lineHeight = 27.sp,
+                        color = when {
+                            isCurrent -> MaterialTheme.colorScheme.onSurface
+                            index < current -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+            }
+        }
+        if (userScrolledAt != 0L || userDragging) {
+            FilledTonalButton(
+                onClick = { userDragging = false; userScrolledAt = 0L },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 10.dp),
+            ) { Text(stringResource(R.string.back_to_reading)) }
         }
     }
 }
 
 @Composable
-private fun ReadingText(text: String, color: androidx.compose.ui.graphics.Color, maxLines: Int) {
-    Text(
-        text,
-        fontFamily = ReadingFont,
-        fontSize = 17.sp,
-        lineHeight = 27.sp,
-        color = color,
-        maxLines = maxLines,
-        overflow = TextOverflow.Ellipsis,
-    )
-}
-
-@Composable
 private fun BigControl(@DrawableRes icon: Int, label: Int, onClick: () -> Unit) {
-    IconButton(onClick = onClick, modifier = Modifier.size(52.dp), colors = IconButtonDefaults.iconButtonColors()) {
-        Icon(painterResource(icon), contentDescription = stringResource(label), modifier = Modifier.size(28.dp))
+    IconButton(onClick = onClick, modifier = Modifier.size(48.dp)) {
+        Icon(painterResource(icon), contentDescription = stringResource(label), modifier = Modifier.size(26.dp))
     }
 }
 

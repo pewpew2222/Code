@@ -35,12 +35,22 @@ class ScreenshotTest {
         status = ReaderStatus.PLAYING,
         chapterUrl = "https://www.empirenovel.com/novel/complete-martial-arts-attributes/34",
         chapterTitle = "Chapter 34: Attack Of A Gigantic Bird",
-        position = 96,
-        total = 105,
+        position = 5,
+        total = 8,
         previousText = "Wang Teng was afraid he would accidentally kill it. That would be a pity.",
         currentText = "When the second lesson ended, during the break, Wang Teng said to Lin Chuhan, “I have to leave. I have something to attend to.”",
         nextText = "After Wang Teng finished speaking, he rushed out of the classroom without waiting for Lin Chuhan’s reply.",
         minutesLeft = 2,
+        pieces = listOf(
+            "Chapter 34: Attack Of A Gigantic Bird",
+            "Before hatching the egg, Wang Teng planned to pay a visit to the pet shop to ask some questions.",
+            "This egg wasn’t ordinary!",
+            "Wang Teng was afraid he would accidentally kill it. That would be a pity.",
+            "When the second lesson ended, during the break, Wang Teng said to Lin Chuhan, “I have to leave. I have something to attend to.”",
+            "After Wang Teng finished speaking, he rushed out of the classroom without waiting for Lin Chuhan’s reply.",
+            "Slash!",
+            "A gigantic shadow swept across the school grounds.",
+        ),
         bookName = "Complete Martial Arts Attributes",
     )
 
@@ -52,11 +62,11 @@ class ScreenshotTest {
     }
 
     @Test fun nowPlayingDark() = shoot("now_playing_dark", dark = true) {
-        NowPlayingScreen(state, settings, true, true, {}, {}, {}, {}, {})
+        NowPlayingScreen(state, settings, true, true, {}, {}, {}, {}, {}, {})
     }
 
     @Test fun nowPlayingLightPurple() = shoot("now_playing_light_purple", dark = false, accent = "purple") {
-        NowPlayingScreen(state, settings, true, false, {}, {}, {}, {}, {})
+        NowPlayingScreen(state, settings, true, false, {}, {}, {}, {}, {}, {})
     }
 
     @Test fun libraryDark() = shoot("library_dark", dark = true) {

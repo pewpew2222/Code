@@ -32,6 +32,8 @@
     <string name="theme_dark">Mörkt</string>
     <string name="setting_accent">Accentfärg</string>
     <string name="accent_dynamic">Använd telefonens färger</string>
+    <string name="back_to_reading">Till stycket som läses</string>
+    <string name="read_from_here">Läs härifrån</string>
     <string name="player_open">Öppna spelaren</string>
     <string name="player_close">Stäng spelaren</string>
     <string name="player_title">Läser upp</string>

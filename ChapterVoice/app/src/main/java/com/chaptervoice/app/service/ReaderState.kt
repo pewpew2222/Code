@@ -16,6 +16,8 @@ data class ReaderUiState(
     val currentText: String = "",
     /** The paragraphs around the current one, for the full-screen player. */
     val previousText: String = "",
+    /** All paragraphs of the chapter, as read aloud (for the scrollable text in the player). */
+    val pieces: List<String> = emptyList(),
     val nextText: String = "",
     val minutesLeft: Int = 0,
     val bookName: String? = null,

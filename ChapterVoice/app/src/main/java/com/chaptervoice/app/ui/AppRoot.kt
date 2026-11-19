@@ -1,5 +1,7 @@
 package com.chaptervoice.app.ui
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -62,6 +64,7 @@ fun AppRoot(
     val rulesGlobalOn = remember(rulesSwitches) { settings.textRulesEnabled }
     val rulesBookOn = remember(rulesSwitches, readingBook) { readingBook == null || settings.bookRulesEnabled(readingBook) }
     val reading = state.status != ReaderStatus.IDLE
+    var bookRulesKey by remember { mutableStateOf<String?>(null) }
 
     fun settingsChanged() {
         if (reading) ReaderService.send(context, ReaderService.ACTION_SETTINGS_CHANGED)
@@ -175,10 +178,17 @@ fun AppRoot(
                         nav.playerOpen = false
                         nav.section = Section.SETTINGS
                     },
+                    onBookRules = { bookRulesKey = readingBook },
                 )
             }
         }
     }
+    BookRulesFor(settings, bookRulesKey, onChanged = { settingsChanged() }, onDismiss = { bookRulesKey = null })
+}
+
+@Composable
+private fun BookRulesFor(settings: AppSettings, key: String?, onChanged: () -> Unit, onDismiss: () -> Unit) {
+    if (key != null) BookRulesDialog(settings = settings, bookKey = key, onChanged = onChanged, onDismiss = onDismiss)
 }
 
 @Composable

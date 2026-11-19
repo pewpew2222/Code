@@ -675,6 +675,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
                 total = pieces.size,
                 currentText = pieces.getOrNull(index).orEmpty(),
                 previousText = pieces.getOrNull(index - 1).orEmpty(),
+                pieces = pieces,
                 nextText = pieces.getOrNull(index + 1).orEmpty(),
                 minutesLeft = minutesLeft(),
                 bookName = book?.name,
