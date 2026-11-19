@@ -224,4 +224,27 @@
     <string name="voices_none">Ingen röst för %1$s är installerad. Lägg till den under Röst och språk nedan (i TTS-motorns inställningar → Installera röstdata).</string>
     <string name="error_voice_missing">rösten för %1$s saknas, installera den i TTS-inställningarna</string>
     <string name="setting_open_tts">Röst och språk (systemets TTS-inställningar)</string>
+    <string name="media_menu">Ladda ner video/GIF</string>
+    <string name="media_title">Video och GIF på sidan</string>
+    <string name="media_searching">Letar efter media…</string>
+    <string name="media_none">Hittade ingen video eller GIF på sidan. Starta videon först om den inte syns – en del sidor laddar den först när den spelas.</string>
+    <string name="media_select_all">Välj alla</string>
+    <string name="media_select_none">Avmarkera</string>
+    <string name="media_choose">Välj vad som ska laddas ner</string>
+    <string name="media_video">Video</string>
+    <string name="media_gif">GIF</string>
+    <string name="media_stream">Ström</string>
+    <string name="media_stream_note">Strömmad video (gråmarkerad) består av många små delar och kan inte sparas som en fil.</string>
+    <plurals name="media_found">
+        <item quantity="one">%d hittad</item>
+        <item quantity="other">%d hittade</item>
+    </plurals>
+    <plurals name="media_download">
+        <item quantity="one">Ladda ner %d fil</item>
+        <item quantity="other">Ladda ner %d filer</item>
+    </plurals>
+    <plurals name="media_started">
+        <item quantity="one">%d nedladdning startad – sparas i Hämtade filer/ChapterVoice</item>
+        <item quantity="other">%d nedladdningar startade – sparas i Hämtade filer/ChapterVoice</item>
+    </plurals>
 </resources>

@@ -6,6 +6,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.CoroutineScope
+import com.chaptervoice.app.core.MediaFinder
 import com.chaptervoice.app.core.NextChapterResolver
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.ImageBitmap
@@ -95,6 +96,9 @@ class BrowserTab internal constructor(
 
     /** Hosts the current page requested, with request counts (for the blocker view). */
     val requests = ConcurrentHashMap<String, Int>()
+
+    /** Video and GIF files the page loaded (for "Download media"). */
+    val mediaRequests: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     val webView: WebView
         get() = view ?: factory(this).also { created ->
@@ -358,6 +362,7 @@ class TabManager(private val context: Context, private val settings: AppSettings
             override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
                 tab.url = url
                 tab.requests.clear()
+                tab.mediaRequests.clear()
                 tab.chapterLinks = null
                 if (pickTabId == tab.id) cancelPick()
             }
@@ -387,6 +392,8 @@ class TabManager(private val context: Context, private val settings: AppSettings
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
                 if (!request.isForMainFrame) {
                     request.url.host?.lowercase()?.let { host -> tab.requests.merge(host, 1, Int::plus) }
+                    val address = request.url.toString()
+                    if (MediaFinder.kindOf(address) != null && tab.mediaRequests.size < 200) tab.mediaRequests += address
                 }
                 return if (this@TabManager.settings.adBlock) AdBlocker.intercept(request) else null
             }

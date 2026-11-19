@@ -109,6 +109,7 @@ fun ReaderScreen(
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
     var showMenu by remember { mutableStateOf(false) }
     var showDownloadDialog by remember { mutableStateOf(false) }
+    var showMedia by remember { mutableStateOf(false) }
     var bookRulesKey by remember { mutableStateOf<String?>(null) }
 
     var editingAddress by remember { mutableStateOf(false) }
@@ -255,6 +256,11 @@ fun ReaderScreen(
                         text = { Text(stringResource(R.string.download_chapters)) },
                         enabled = active.url.isNotEmpty(),
                         onClick = { showMenu = false; showDownloadDialog = true },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.media_menu)) },
+                        enabled = active.url.isNotEmpty(),
+                        onClick = { showMenu = false; showMedia = true },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.downloads)) },
@@ -438,6 +444,7 @@ fun ReaderScreen(
         )
     }
 
+    if (showMedia && active.url.isNotEmpty()) MediaSheet(active, onDismiss = { showMedia = false })
     if (showDownloadDialog) {
         DownloadDialog(
             onDownload = { count ->
