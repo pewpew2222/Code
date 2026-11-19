@@ -277,6 +277,21 @@ fun ReaderScreen(
                     readCurrentPage(context, active.webView)
                 }
             },
+            onGoToPage = {
+                val url = state.chapterUrl
+                if (url != null) {
+                    overlay = Overlay.NONE
+                    val tab = tabs.find(readerTabId)
+                    if (tab != null) {
+                        tabs.select(tab.id)
+                        if (!BookmarkStore.sameUrl(tab.url, url)) tab.load(url)
+                    } else {
+                        // Started from Downloads, or the tab was closed: open the chapter.
+                        val target = if (active.url.isEmpty()) active.also { it.load(url) } else tabs.newTab(url)
+                        readerTabId = target.id
+                    }
+                }
+            },
             onCommand = { action -> ReaderService.send(context, action) },
         )
     }

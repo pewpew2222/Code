@@ -34,6 +34,7 @@ import com.chaptervoice.app.service.ReaderUiState
 internal fun PlayerPanel(
     state: ReaderUiState,
     onReadPage: () -> Unit,
+    onGoToPage: () -> Unit,
     onCommand: (String) -> Unit,
 ) {
     Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
@@ -47,19 +48,28 @@ internal fun PlayerPanel(
                 return@Column
             }
 
-            Text(
-                text = state.chapterTitle ?: state.chapterUrl.orEmpty(),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = statusLine(state),
-                style = MaterialTheme.typography.bodySmall,
-                color = if (state.status == ReaderStatus.ERROR) MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = state.chapterTitle ?: state.chapterUrl.orEmpty(),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = statusLine(state),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (state.status == ReaderStatus.ERROR) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (state.chapterUrl != null) {
+                    IconButton(onClick = onGoToPage) {
+                        Icon(painterResource(R.drawable.ic_open_page), contentDescription = stringResource(R.string.go_to_reading_page))
+                    }
+                }
+            }
             if (state.status == ReaderStatus.LOADING) {
                 LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 6.dp))
             } else if (state.currentText.isNotEmpty()) {
