@@ -32,6 +32,7 @@ import androidx.media.AudioManagerCompat
 import com.chaptervoice.app.AppSettings
 import com.chaptervoice.app.MainActivity
 import com.chaptervoice.app.R
+import com.chaptervoice.app.core.BookKey
 import com.chaptervoice.app.core.Chapter
 import com.chaptervoice.app.core.ChapterFetcher
 import com.chaptervoice.app.core.ChapterParser
@@ -501,7 +502,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
 
     /** The chapter as cleaned pieces of text, ready for the TTS engine. */
     private fun buildPieces(loaded: Chapter): List<String> {
-        val pronunciation = settings.pronunciation()
+        val pronunciation = settings.pronunciation(BookKey.of(loaded.url))
         val text = buildList {
             if (settings.readTitle && loaded.heading.isNotBlank()) add(loaded.heading)
             addAll(loaded.paragraphs)

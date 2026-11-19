@@ -55,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chaptervoice.app.AppSettings
 import com.chaptervoice.app.R
 import com.chaptervoice.app.browser.BrowserTab
+import com.chaptervoice.app.core.BookKey
 import com.chaptervoice.app.browser.TabManager
 import com.chaptervoice.app.data.BookmarkStore
 import com.chaptervoice.app.data.DownloadWorker
@@ -89,6 +90,7 @@ fun ReaderScreen(
     var showSettings by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showDownloadDialog by remember { mutableStateOf(false) }
+    var bookRulesKey by remember { mutableStateOf<String?>(null) }
     /** The tab whose page is being read aloud; it follows the reader to new chapters. */
     var readerTabId by remember { mutableLongStateOf(-1L) }
 
@@ -201,6 +203,15 @@ fun ReaderScreen(
                         text = { Text(stringResource(R.string.blocker_title)) },
                         enabled = active.url.isNotEmpty(),
                         onClick = { showMenu = false; overlay = Overlay.BLOCKER },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.book_rules_title)) },
+                        enabled = state.chapterUrl != null || active.url.isNotEmpty(),
+                        onClick = {
+                            showMenu = false
+                            // The book being read aloud, otherwise the page on screen.
+                            bookRulesKey = BookKey.of(state.chapterUrl ?: active.url)
+                        },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.settings)) },
@@ -321,6 +332,17 @@ fun ReaderScreen(
                     Text(stringResource(R.string.open_in_background_tab))
                 }
             },
+        )
+    }
+
+    bookRulesKey?.let { key ->
+        BookRulesDialog(
+            settings = settings,
+            bookKey = key,
+            onChanged = {
+                if (state.status != ReaderStatus.IDLE) ReaderService.send(context, ReaderService.ACTION_SETTINGS_CHANGED)
+            },
+            onDismiss = { bookRulesKey = null },
         )
     }
 

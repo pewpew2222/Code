@@ -407,6 +407,12 @@ class TextCleanerTest {
         assertEquals("I expect an express train.", TextCleaner.clean("I expect an express train.", pronunciation = rules))
         assertEquals("He was the number 1 student, number 3 too.", TextCleaner.clean("He was the No. 1 student, No.3 too.", pronunciation = rules))
         assertEquals("No. I refuse.", TextCleaner.clean("No. I refuse.", pronunciation = rules))
+        // A book's rule comes first, so it wins over a general rule for the same word.
+        val bookFirst = TextCleaner.Pronunciation(
+            listOf(TextCleaner.Replacement("exp", "expedition"), TextCleaner.Replacement("exp", "experience")),
+            numberRule = false,
+        )
+        assertEquals("The expedition began.", TextCleaner.clean("The Exp began.", pronunciation = bookFirst))
         val noNumberRule = TextCleaner.Pronunciation(emptyList(), numberRule = false)
         assertEquals("No. 1", TextCleaner.clean("No. 1", pronunciation = noNumberRule))
     }
@@ -482,5 +488,32 @@ class LanguageDetectorTest {
         assertEquals("sv", LanguageDetector.detect("sv", listOf("Han gick in i rummet och tittade på henne.")))
         assertEquals("en", LanguageDetector.detect("zh-CN", english))
         assertNull(LanguageDetector.detect(null, listOf("Han gick in i rummet och tittade på henne.")))
+    }
+}
+
+class BookKeyTest {
+
+    @Test
+    fun removesTheChapterPart() {
+        assertEquals("site.com/novel/martial-arts", BookKey.of("https://www.site.com/novel/martial-arts/chapter-3"))
+        assertEquals("site.com/novel/martial-arts", BookKey.of("https://site.com/novel/martial-arts/chapter-104/"))
+        assertEquals("site.com/book/12345", BookKey.of("https://site.com/book/12345/678"))
+        assertEquals("site.com/martial-arts", BookKey.of("https://site.com/martial-arts-chapter-3.html"))
+        assertEquals("site.com/martial-arts", BookKey.of("https://site.com/martial-arts_c12"))
+        assertEquals("site.com/novel/solo", BookKey.of("https://site.com/novel/solo"))
+    }
+
+    @Test
+    fun chaptersOfTheSameBookShareAKey() {
+        assertEquals(
+            BookKey.of("https://www.empirenovel.com/novel/complete-martial-arts-attributes/3"),
+            BookKey.of("https://www.empirenovel.com/novel/complete-martial-arts-attributes/34"),
+        )
+    }
+
+    @Test
+    fun readableNames() {
+        assertEquals("Martial Arts (site.com)", BookKey.displayName("site.com/novel/martial-arts"))
+        assertEquals("site.com/book/12345", BookKey.displayName("site.com/book/12345"))
     }
 }

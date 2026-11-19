@@ -81,7 +81,40 @@ class AppSettings(context: Context) {
         get() = prefs.getBoolean("number_rule", true)
         set(value) = prefs.edit().putBoolean("number_rule", value).apply()
 
-    fun pronunciation() = TextCleaner.Pronunciation(pronunciationRules, numberRule)
+    /** Rules for one book (see BookKey); they apply before the general rules. */
+    fun bookRules(bookKey: String): List<TextCleaner.Replacement> =
+        allBookRules()[bookKey].orEmpty()
+
+    fun setBookRules(bookKey: String, rules: List<TextCleaner.Replacement>) {
+        val all = allBookRules().toMutableMap()
+        if (rules.isEmpty()) all.remove(bookKey) else all[bookKey] = rules
+        val json = JSONObject()
+        all.forEach { (key, list) ->
+            json.put(key, JSONArray().apply { list.forEach { put(JSONObject().put("from", it.from).put("to", it.to)) } })
+        }
+        prefs.edit().putString("book_rules", json.toString()).apply()
+    }
+
+    /** Books that have their own rules, with the number of rules. */
+    fun booksWithRules(): List<Pair<String, Int>> =
+        allBookRules().map { it.key to it.value.size }.sortedBy { it.first }
+
+    private fun allBookRules(): Map<String, List<TextCleaner.Replacement>> = runCatching {
+        val json = JSONObject(prefs.getString("book_rules", "{}")!!)
+        json.keys().asSequence().associateWith { key ->
+            val arr = json.getJSONArray(key)
+            (0 until arr.length()).map { i ->
+                val o = arr.getJSONObject(i)
+                TextCleaner.Replacement(o.getString("from"), o.optString("to"))
+            }
+        }
+    }.getOrDefault(emptyMap())
+
+    /** The rules for reading a chapter of [bookKey]: the book's own first, then the general ones. */
+    fun pronunciation(bookKey: String? = null) = TextCleaner.Pronunciation(
+        bookKey?.let { bookRules(it) }.orEmpty() + pronunciationRules,
+        numberRule,
+    )
 
     /** TTS engine package, e.g. SherpaTTS ("" = the phone's default engine). */
     var ttsEngine: String

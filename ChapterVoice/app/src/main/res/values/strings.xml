@@ -127,6 +127,11 @@
     <string name="pronunciation_from">Ord i texten</string>
     <string name="pronunciation_to">Läs som</string>
     <string name="pronunciation_add">Lägg till regel</string>
+    <string name="book_rules_title">Uttalsregler för boken</string>
+    <string name="book_rules_hint">Gäller bara den här boken (alla dess kapitel) och används före de allmänna reglerna.</string>
+    <string name="book_rules_list">Böcker med egna regler</string>
+    <string name="book_rules_row">%1$s (%2$d)</string>
+    <string name="edit">Redigera</string>
     <string name="setting_number_rule">Läs "No." följt av en siffra som "number" (No. 1 → number 1)</string>
     <string name="setting_engine">Motor för talsyntes</string>
     <string name="engine_default">Telefonens standard (%1$s)</string>
