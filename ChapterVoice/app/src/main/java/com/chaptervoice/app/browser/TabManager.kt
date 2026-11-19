@@ -190,11 +190,19 @@ class TabManager(private val context: Context, private val settings: AppSettings
     /** The last closed tab, so it can be reopened ("Undo"). */
     private var lastClosed: Triple<Int, BrowserTab, ImageBitmap?>? = null
 
+    /** Recently closed pages (title, address), newest first, for the start page. */
+    val recentlyClosed = mutableStateListOf<Pair<String, String>>()
+
     fun close(id: Long) {
         val index = tabs.indexOfFirst { it.id == id }
         if (index < 0) return
         val closing = tabs[index]
         lastClosed = Triple(index, BrowserTab(nextId++, closing.url, closing.title, ::createWebView), closing.thumbnail)
+        if (closing.url.isNotEmpty()) {
+            recentlyClosed.removeAll { it.second == closing.url }
+            recentlyClosed.add(0, closing.title to closing.url)
+            while (recentlyClosed.size > 8) recentlyClosed.removeAt(recentlyClosed.lastIndex)
+        }
         closing.destroy()
         tabs.removeAt(index)
         if (tabs.isEmpty()) {

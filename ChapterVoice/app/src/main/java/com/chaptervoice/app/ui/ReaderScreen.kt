@@ -1,5 +1,6 @@
 package com.chaptervoice.app.ui
 
+import com.chaptervoice.app.data.UpdateChecker
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
@@ -114,6 +115,7 @@ fun ReaderScreen(
     var addressQuery by remember { mutableStateOf("") }
     var showTabHistory by remember { mutableStateOf(false) }
     val books by remember { BookStore.get(context) }.items.collectAsStateWithLifecycle()
+    val updates by UpdateChecker.updates.collectAsStateWithLifecycle()
 
     // Swiping the address bar slides the page towards the neighbouring tab.
     val scope = rememberCoroutineScope()
@@ -332,17 +334,19 @@ fun ReaderScreen(
                     onReload = { overlay = Overlay.NONE; active.reload() },
                     onClose = { overlay = Overlay.NONE },
                 )
-                active.url.isEmpty() -> StartPage(
-                    bookmarks = bookmarks,
-                    positions = positions,
+                active.url.isEmpty() -> NewTabPage(
+                    settings = settings,
+                    history = history,
+                    books = books,
+                    updates = updates,
+                    recentlyClosed = tabs.recentlyClosed,
                     onOpen = { open(it) },
-                    onContinue = { url ->
-                        // Open the chapter here and read on from the saved paragraph.
+                    onReadNewChapter = { url ->
+                        // Open the new chapter here and read it aloud.
                         open(url)
                         nav.readerTabId = active.id
                         ReaderService.send(context, ReaderService.ACTION_PLAY_URL, url)
                     },
-                    onForgetPosition = { positionStore.remove(it) },
                 )
                 else -> Column {
                     if (tabs.pickTabId == active.id) {
@@ -461,7 +465,7 @@ private fun readCurrentPage(context: Context, webView: WebView) {
     }
 }
 
-private fun normalizeAddress(input: String): String {
+internal fun normalizeAddress(input: String): String {
     val text = input.trim()
     return when {
         text.startsWith("http://") || text.startsWith("https://") -> text

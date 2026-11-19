@@ -47,6 +47,7 @@ import com.chaptervoice.app.data.ImageCache
 import com.chaptervoice.app.data.DownloadWorker
 import com.chaptervoice.app.data.OfflineStore
 import com.chaptervoice.app.data.ReadingPositions
+import com.chaptervoice.app.data.UpdateChecker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -293,11 +294,15 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
                 takePrefetch(url)?.await() ?: fetch(url, referrer = previous?.url)
             }
 
+            val autoNext = previous != null && previous.nextUrl == url
             val loaded = result.getOrElse { error ->
+                // The next chapter does not exist (yet): the book is read up to date.
+                if (autoNext && error is HttpStatusException && error.statusCode == 404) markCaughtUp(previous!!)
                 showError(describe(error))
                 return@launch
             }
             if (loaded.paragraphs.isEmpty()) {
+                if (autoNext) markCaughtUp(previous!!)
                 showError(getString(R.string.error_no_text))
                 return@launch
             }
@@ -305,6 +310,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
                 (loaded.url == previous.url || loaded.textFingerprint == previous.textFingerprint)
             ) {
                 // The site redirected back to the same page or to an index: the novel has ended.
+                markCaughtUp(previous)
                 finish(getString(R.string.message_no_more_chapters))
                 return@launch
             }
@@ -357,6 +363,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         val key = BookKey.of(loaded.url) ?: return
         val books = BookStore.get(this)
         books.touch(key, BookNames.guess(key, loaded.pageTitle), requestedUrl ?: loaded.url, loaded.title, loaded.coverUrl)
+        UpdateChecker.clear(this, key)
         val book = books.get(key) ?: return
         scope.launch {
             var cover = book.coverUrl
@@ -493,10 +500,16 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         }
     }
 
+    /** Remember that [last] is the newest chapter, so new ones can be looked for later. */
+    private fun markCaughtUp(last: Chapter) {
+        BookKey.of(last.url)?.let { BookStore.get(this).markCaughtUp(it) }
+    }
+
     private fun nextChapter() {
         val current = chapter ?: return
         val next = current.nextUrl
         if (next == null) {
+            markCaughtUp(current)
             finish(getString(R.string.message_no_next_found))
             return
         }

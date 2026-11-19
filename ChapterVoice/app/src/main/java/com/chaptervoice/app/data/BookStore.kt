@@ -17,6 +17,8 @@ data class Book(
     val lastChapterUrl: String,
     val lastChapterTitle: String,
     val updatedAt: Long,
+    /** Reading reached the newest chapter (there was no next one): watch for new ones. */
+    val caughtUp: Boolean = false,
 )
 
 /** Books you have listened to, most recent first. Updated by the reader as chapters start. */
@@ -40,6 +42,7 @@ class BookStore private constructor(context: Context) {
             lastChapterUrl = chapterUrl,
             lastChapterTitle = chapterTitle,
             updatedAt = System.currentTimeMillis(),
+            caughtUp = false,
         )
         save(listOf(book) + mutable.value.filterNot { it.key == key })
     }
@@ -57,6 +60,12 @@ class BookStore private constructor(context: Context) {
         save(mutable.value.map { if (it.key == key) it.copy(coverUrl = coverUrl ?: it.coverUrl, coverChecked = true) else it })
     }
 
+    /** No chapter after the last one read: the book is up to date. */
+    @Synchronized
+    fun markCaughtUp(key: String) {
+        save(mutable.value.map { if (it.key == key) it.copy(caughtUp = true) else it })
+    }
+
     @Synchronized
     fun remove(key: String) = save(mutable.value.filterNot { it.key == key })
 
@@ -66,7 +75,8 @@ class BookStore private constructor(context: Context) {
         mutable.value.forEach {
             json.put(
                 JSONObject().put("k", it.key).put("n", it.name).put("c", it.coverUrl ?: "").put("cc", it.coverChecked)
-                    .put("u", it.lastChapterUrl).put("t", it.lastChapterTitle).put("v", it.updatedAt),
+                    .put("u", it.lastChapterUrl).put("t", it.lastChapterTitle).put("v", it.updatedAt)
+                    .put("up", it.caughtUp),
             )
         }
         prefs.edit().putString(KEY, json.toString()).apply()
@@ -78,7 +88,7 @@ class BookStore private constructor(context: Context) {
             val o = json.getJSONObject(i)
             Book(
                 o.getString("k"), o.optString("n"), o.optString("c").ifEmpty { null }, o.optBoolean("cc"),
-                o.optString("u"), o.optString("t"), o.optLong("v"),
+                o.optString("u"), o.optString("t"), o.optLong("v"), o.optBoolean("up"),
             )
         }
     }.getOrDefault(emptyList())

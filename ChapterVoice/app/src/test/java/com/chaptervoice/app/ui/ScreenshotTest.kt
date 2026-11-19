@@ -122,6 +122,29 @@ class ScreenshotTest {
         }
     }
 
+    @Test fun newTabDark() {
+        val now = 0L
+        val history = listOf(
+            "https://www.empirenovel.com/novel/a/1", "https://www.empirenovel.com/novel/a/2", "https://www.empirenovel.com/novel/b/3",
+            "https://www.royalroad.com/fiction/1", "https://www.royalroad.com/fiction/2", "https://novelfire.net/book/x",
+            "https://www.novelphoenix.com/", "https://www.scribblehub.com/series/1",
+        ).map { com.chaptervoice.app.data.HistoryEntry(it, "", now) }
+        val book = Book("empirenovel.com/novel/how-do-we-play", "How Do We Play If This Boss Isnt Nerfed", null, true,
+            "https://www.empirenovel.com/novel/how-do-we-play/123", "Chapter 123", 0, caughtUp = true)
+        val update = com.chaptervoice.app.data.BookUpdate(book.key, 3, "https://www.empirenovel.com/novel/how-do-we-play/124", "Chapter 124: The Abyss")
+        shoot("new_tab_dark", dark = true, accent = "amber") {
+            NewTabPage(
+                settings = settings,
+                history = history,
+                books = listOf(book),
+                updates = mapOf(book.key to update),
+                recentlyClosed = listOf("Shadow Slave - Novel Fire" to "https://novelfire.net/book/shadow-slave"),
+                onOpen = {},
+                onReadNewChapter = {},
+            )
+        }
+    }
+
     @Test fun libraryEmptyLight() = shoot("library_empty_light", dark = false, accent = "green") {
         LibraryScreen(emptyList(), emptyList(), emptyList(), emptyList(), {}, {}, {}, {}, {})
     }

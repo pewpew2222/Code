@@ -55,6 +55,16 @@
     <string name="go">Gå</string>
     <string name="jump_failed">Adressen innehåller inget kapitelnummer att byta.</string>
     <string name="jump_hint">Byter kapitelnumret i adressen. Fungerar på sajter där adressen innehåller kapitlets nummer.</string>
+    <string name="newtab_search_hint">Sök efter en bok eller skriv en adress</string>
+    <string name="newtab_search_web">Webben</string>
+    <string name="newtab_open_copied">Öppna kopierad länk</string>
+    <string name="newtab_new_chapters">Nya kapitel</string>
+    <string name="newtab_most_visited">Mest besökta</string>
+    <string name="newtab_recently_closed">Senast stängda</string>
+    <string name="newtab_discover">Upptäck fler sajter</string>
+    <string name="site_pin">Fäst</string>
+    <string name="site_unpin">Lossa</string>
+    <string name="site_hide">Dölj</string>
     <string name="library">Bibliotek</string>
     <string name="library_welcome_title">Välkommen!</string>
     <string name="library_welcome_text">Öppna en webbnovell under Webben och tryck på Läs upp. Böckerna du lyssnar på hamnar här, så att du kan fortsätta där du slutade.</string>
@@ -90,8 +100,6 @@
     <string name="chip_rules_off">Aa Textregler av</string>
     <string name="resumed_from">fortsätter från stycke %1$d</string>
     <string name="continue_reading">Fortsätt läsa</string>
-    <string name="continue_empty">Inga påbörjade kapitel. Kapitel du börjar lyssna på visas här, så att du kan fortsätta från samma stycke.</string>
-    <string name="position_of">%1$s · stycke %2$d av %3$d</string>
     <string name="go_to_reading_page">Gå till sidan som läses upp</string>
     <string name="action_restart_chapter">Starta om kapitlet</string>
     <string name="action_prev_paragraph">Föregående stycke</string>
@@ -140,8 +148,6 @@
     <string name="history_empty">Ingen historik än.</string>
     <string name="cancel">Avbryt</string>
     <string name="no_matches">Inga träffar.</string>
-    <string name="search_sites">Sök webbplatser och bokmärken…</string>
-    <string name="sites_count">%1$d st · A–Ö</string>
 
     <string name="blocker_title">Reklamblockering på sidan</string>
     <string name="blocker_summary">%1$s hämtar från %2$d andra domäner. %3$d blockeras.</string>

@@ -169,6 +169,14 @@ class AppSettings(context: Context) {
             themeChanges.value++
         }
 
+    /** Sites pinned to / hidden from "most visited" on the start page. */
+    var pinnedSites: Set<String>
+        get() = prefs.getStringSet("pinned_sites", emptySet()).orEmpty().toSet()
+        set(value) = prefs.edit().putStringSet("pinned_sites", value).apply()
+    var hiddenSites: Set<String>
+        get() = prefs.getStringSet("hidden_sites", emptySet()).orEmpty().toSet()
+        set(value) = prefs.edit().putStringSet("hidden_sites", value).apply()
+
     /** TTS engine package, e.g. SherpaTTS ("" = the phone's default engine). */
     var ttsEngine: String
         get() = prefs.getString("tts_engine", "") ?: ""
