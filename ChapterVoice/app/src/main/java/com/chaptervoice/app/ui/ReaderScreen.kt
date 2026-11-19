@@ -1,5 +1,8 @@
 package com.chaptervoice.app.ui
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.Surface
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import android.content.Context
@@ -66,25 +69,19 @@ import com.chaptervoice.app.service.ReaderState
 import com.chaptervoice.app.service.ReaderStatus
 import org.json.JSONTokener
 
-private enum class Overlay { NONE, TABS, BOOKMARKS, HISTORY, BLOCKER, DOWNLOADS }
+private enum class Overlay { NONE, TABS, BOOKMARKS, HISTORY, BLOCKER }
 
 @Composable
 fun ReaderScreen(
     settings: AppSettings,
     tabs: TabManager,
+    nav: AppNav,
     incomingUrl: String?,
     onIncomingUrlHandled: () -> Unit,
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val state by ReaderState.state.collectAsStateWithLifecycle()
-    val rulesSwitches by AppSettings.rulesSwitches.collectAsStateWithLifecycle()
-    val readingBook = state.chapterUrl?.let { BookKey.of(it) }
-    val rulesGlobalOn = remember(rulesSwitches) { settings.textRulesEnabled }
-    val rulesBookOn = remember(rulesSwitches, readingBook) { readingBook == null || settings.bookRulesEnabled(readingBook) }
-    fun rulesChanged() {
-        if (state.status != ReaderStatus.IDLE) ReaderService.send(context, ReaderService.ACTION_SETTINGS_CHANGED)
-    }
     val bookmarkStore = remember { BookmarkStore.get(context) }
     val bookmarks by bookmarkStore.items.collectAsStateWithLifecycle()
     val positionStore = remember { ReadingPositions.get(context) }
@@ -94,12 +91,9 @@ fun ReaderScreen(
 
     val active = tabs.active
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
-    var showSettings by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showDownloadDialog by remember { mutableStateOf(false) }
     var bookRulesKey by remember { mutableStateOf<String?>(null) }
-    /** The tab whose page is being read aloud; it follows the reader to new chapters. */
-    var readerTabId by remember { mutableLongStateOf(-1L) }
 
     var addressText by remember(active.id, active.url) { mutableStateOf(active.url) }
     val isBookmarked = active.url.isNotEmpty() && bookmarks.any { BookmarkStore.sameUrl(it.url, active.url) }
@@ -123,16 +117,18 @@ fun ReaderScreen(
     // Follow the reader in its tab when it moves on to the next chapter.
     LaunchedEffect(state.chapterUrl) {
         val url = state.chapterUrl ?: return@LaunchedEffect
-        val tab = tabs.find(readerTabId) ?: return@LaunchedEffect
+        val tab = tabs.find(nav.readerTabId) ?: return@LaunchedEffect
         if (state.status != ReaderStatus.IDLE && !BookmarkStore.sameUrl(url, tab.url)) tab.load(url)
     }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .systemBarsPadding()
-            .imePadding(),
-    ) {
+    fun readThisPage() {
+        if (active.url.isNotEmpty()) {
+            nav.readerTabId = active.id
+            readCurrentPage(context, active.webView)
+        }
+    }
+
+    Column(Modifier.fillMaxSize()) {
         // ------------------------------------------------------------ toolbar
         Row(
             Modifier
@@ -176,6 +172,11 @@ fun ReaderScreen(
                 }
                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                     DropdownMenuItem(
+                        text = { Text(stringResource(R.string.read_this_page)) },
+                        enabled = active.url.isNotEmpty(),
+                        onClick = { showMenu = false; readThisPage() },
+                    )
+                    DropdownMenuItem(
                         text = { Text(stringResource(R.string.tab_new)) },
                         onClick = { showMenu = false; overlay = Overlay.NONE; tabs.newTab() },
                     )
@@ -204,7 +205,7 @@ fun ReaderScreen(
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.downloads)) },
-                        onClick = { showMenu = false; overlay = Overlay.DOWNLOADS },
+                        onClick = { showMenu = false; nav.section = Section.DOWNLOADS },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.blocker_title)) },
@@ -222,7 +223,7 @@ fun ReaderScreen(
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.settings)) },
-                        onClick = { showMenu = false; showSettings = true },
+                        onClick = { showMenu = false; nav.section = Section.SETTINGS },
                     )
                 }
             }
@@ -237,7 +238,7 @@ fun ReaderScreen(
                 overlay == Overlay.TABS -> TabsOverview(
                     tabs = tabs.tabs,
                     activeId = tabs.activeId,
-                    readerTabId = readerTabId,
+                    readerTabId = nav.readerTabId,
                     onSelect = { tabs.select(it); overlay = Overlay.NONE },
                     onClose = { tabs.close(it) },
                     onNewTab = { tabs.newTab(); overlay = Overlay.NONE },
@@ -256,14 +257,6 @@ fun ReaderScreen(
                     onClear = { historyStore.clear() },
                     onClose = { overlay = Overlay.NONE },
                 )
-                overlay == Overlay.DOWNLOADS -> DownloadsScreen(
-                    onPlay = { url ->
-                        overlay = Overlay.NONE
-                        readerTabId = -1L // played from storage, not from a tab
-                        ReaderService.send(context, ReaderService.ACTION_PLAY_URL, url)
-                    },
-                    onClose = { overlay = Overlay.NONE },
-                )
                 overlay == Overlay.BLOCKER -> BlockerScreen(
                     tab = active,
                     adBlockEnabled = settings.adBlock,
@@ -279,7 +272,7 @@ fun ReaderScreen(
                     onContinue = { url ->
                         // Open the chapter here and read on from the saved paragraph.
                         open(url)
-                        readerTabId = active.id
+                        nav.readerTabId = active.id
                         ReaderService.send(context, ReaderService.ACTION_PLAY_URL, url)
                     },
                     onForgetPosition = { positionStore.remove(it) },
@@ -298,35 +291,23 @@ fun ReaderScreen(
             }
         }
 
-        PlayerPanel(
-            state = state,
-            onReadPage = {
-                if (active.url.isNotEmpty()) {
-                    readerTabId = active.id
-                    readCurrentPage(context, active.webView)
+        // Read the page on screen, unless it is the one already being read.
+        val readingThisPage = state.status != ReaderStatus.IDLE && state.chapterUrl != null &&
+            BookmarkStore.sameUrl(state.chapterUrl.orEmpty(), active.url)
+        if (overlay == Overlay.NONE && active.url.isNotEmpty() && !readingThisPage) {
+            Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
+                FilledTonalButton(
+                    onClick = { readThisPage() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Icon(painterResource(R.drawable.ic_play), contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text(stringResource(R.string.read_this_page))
                 }
-            },
-            rulesGlobalOn = rulesGlobalOn,
-            rulesBookOn = rulesBookOn,
-            onRulesGlobalChange = { settings.textRulesEnabled = it; rulesChanged() },
-            onRulesBookChange = { on -> readingBook?.let { settings.setBookRulesEnabled(it, on) }; rulesChanged() },
-            onGoToPage = {
-                val url = state.chapterUrl
-                if (url != null) {
-                    overlay = Overlay.NONE
-                    val tab = tabs.find(readerTabId)
-                    if (tab != null) {
-                        tabs.select(tab.id)
-                        if (!BookmarkStore.sameUrl(tab.url, url)) tab.load(url)
-                    } else {
-                        // Started from Downloads, or the tab was closed: open the chapter.
-                        val target = if (active.url.isEmpty()) active.also { it.load(url) } else tabs.newTab(url)
-                        readerTabId = target.id
-                    }
-                }
-            },
-            onCommand = { action -> ReaderService.send(context, action) },
-        )
+            }
+        }
     }
 
     tabs.linkMenuUrl?.let { link ->
@@ -362,23 +343,12 @@ fun ReaderScreen(
             onDownload = { count ->
                 showDownloadDialog = false
                 DownloadWorker.download(context, active.url, count)
-                overlay = Overlay.DOWNLOADS
+                nav.section = Section.DOWNLOADS
             },
             onDismiss = { showDownloadDialog = false },
         )
     }
 
-    if (showSettings) {
-        SettingsDialog(
-            settings = settings,
-            onChanged = {
-                if (state.status != ReaderStatus.IDLE) {
-                    ReaderService.send(context, ReaderService.ACTION_SETTINGS_CHANGED)
-                }
-            },
-            onDismiss = { showSettings = false },
-        )
-    }
 }
 
 /** Shows the active tab's WebView, moving it into place when the tab changes. */

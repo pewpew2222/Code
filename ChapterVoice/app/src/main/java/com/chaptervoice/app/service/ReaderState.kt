@@ -14,6 +14,12 @@ data class ReaderUiState(
     val position: Int = 0,
     val total: Int = 0,
     val currentText: String = "",
+    /** The paragraphs around the current one, for the full-screen player. */
+    val previousText: String = "",
+    val nextText: String = "",
+    val minutesLeft: Int = 0,
+    val bookName: String? = null,
+    val coverUrl: String? = null,
     val message: String? = null,
     /** A problem that does not stop reading, e.g. a missing voice. */
     val warning: String? = null,

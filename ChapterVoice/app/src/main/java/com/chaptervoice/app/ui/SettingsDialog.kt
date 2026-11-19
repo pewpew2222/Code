@@ -1,5 +1,21 @@
 package com.chaptervoice.app.ui
 
+import android.os.Build
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import android.content.Context
@@ -38,7 +54,7 @@ import com.chaptervoice.app.core.NextMode
 import kotlin.math.roundToInt
 
 @Composable
-internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDismiss: () -> Unit) {
+internal fun SettingsScreen(settings: AppSettings, onChanged: () -> Unit) {
     val context = LocalContext.current
     var rate by remember { mutableFloatStateOf(settings.speechRate) }
     var pitch by remember { mutableFloatStateOf(settings.pitch) }
@@ -51,12 +67,21 @@ internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDism
     var preload by remember { mutableIntStateOf(settings.preloadCount) }
     var deleteAfterRead by remember { mutableStateOf(settings.deleteAfterRead) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done)) } },
-        title = { Text(stringResource(R.string.settings)) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
+    Surface(Modifier.fillMaxSize()) {
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+            ) {
+                Text(
+                    stringResource(R.string.settings),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+                AppearanceSettings(settings)
+                HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                Text(stringResource(R.string.section_reading), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
                 Text(stringResource(R.string.setting_rate, rate))
                 Slider(
                     value = rate,
@@ -157,8 +182,56 @@ internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDism
                     Text(stringResource(R.string.setting_open_tts))
                 }
             }
-        },
-    )
+    }
+}
+
+/** Light/dark theme and accent colour. */
+@Composable
+private fun AppearanceSettings(settings: AppSettings) {
+    var mode by remember { mutableStateOf(settings.themeMode) }
+    var accent by remember { mutableStateOf(settings.accent) }
+    Text(stringResource(R.string.section_appearance), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+    Text(stringResource(R.string.setting_theme), modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf("system" to R.string.theme_system, "light" to R.string.theme_light, "dark" to R.string.theme_dark).forEach { (id, label) ->
+            FilterChip(
+                selected = mode == id,
+                onClick = { mode = id; settings.themeMode = id },
+                label = { Text(stringResource(label)) },
+            )
+        }
+    }
+    Text(stringResource(R.string.setting_accent), modifier = Modifier.padding(top = 12.dp, bottom = 6.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+        ACCENTS.forEach { option ->
+            val selected = accent == option.id
+            Box(
+                Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .border(if (selected) 3.dp else 0.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                    .padding(if (selected) 5.dp else 0.dp)
+                    .clip(CircleShape)
+                    .background(if (dark) option.dark else option.light)
+                    .selectable(selected = selected, role = Role.RadioButton, onClick = { accent = option.id; settings.accent = option.id })
+                    .semantics { contentDescription = option.label },
+            )
+        }
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            Text(stringResource(R.string.accent_dynamic), modifier = Modifier.weight(1f))
+            Switch(
+                checked = accent == "dynamic",
+                onCheckedChange = { on ->
+                    val value = if (on) "dynamic" else "blue"
+                    accent = value
+                    settings.accent = value
+                },
+            )
+        }
+    }
 }
 
 @Composable
@@ -186,6 +259,5 @@ private fun PauseSlider(label: @Composable (Int) -> String, initial: Int, maxMs:
         onValueChange = { value = (it / stepMs).roundToInt() * stepMs },
         onValueChangeFinished = { onDone(value) },
         valueRange = 0f..maxMs.toFloat(),
-        steps = maxMs / stepMs - 1,
     )
 }

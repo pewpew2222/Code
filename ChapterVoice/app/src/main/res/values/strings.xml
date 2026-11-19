@@ -7,10 +7,43 @@
     <string name="settings">Inställningar</string>
     <string name="done">Klar</string>
     <string name="read_this_page">Läs upp den här sidan</string>
-    <string name="read_this_page_instead">Läs upp sidan som visas i stället</string>
 
     <string name="action_play">Spela</string>
     <string name="action_pause">Pausa</string>
+    <string name="library">Bibliotek</string>
+    <string name="library_welcome_title">Välkommen!</string>
+    <string name="library_welcome_text">Öppna en webbnovell under Webben och tryck på Läs upp. Böckerna du lyssnar på hamnar här, så att du kan fortsätta där du slutade.</string>
+    <string name="library_find_book">Hitta en bok</string>
+    <string name="library_remove">Ta bort från biblioteket</string>
+    <string name="continue_listening">Fortsätt lyssna</string>
+    <string name="downloads_offline">Nedladdat för offline</string>
+    <string name="downloads_card">%1$d kapitel · %2$d sajter · %3$s</string>
+    <string name="find_new_books">Hitta nya böcker</string>
+    <string name="more">Fler</string>
+    <string name="nav_library">Bibliotek</string>
+    <string name="nav_web">Webben</string>
+    <string name="nav_downloads">Nedladdat</string>
+    <string name="nav_settings">Inställningar</string>
+    <string name="section_appearance">Utseende</string>
+    <string name="section_reading">Uppläsning</string>
+    <string name="setting_theme">Tema</string>
+    <string name="theme_system">Följ telefonen</string>
+    <string name="theme_light">Ljust</string>
+    <string name="theme_dark">Mörkt</string>
+    <string name="setting_accent">Accentfärg</string>
+    <string name="accent_dynamic">Använd telefonens färger</string>
+    <string name="player_open">Öppna spelaren</string>
+    <string name="player_close">Stäng spelaren</string>
+    <string name="player_title">Läser upp</string>
+    <string name="player_stop">Stoppa uppläsningen</string>
+    <string name="minutes_left">ca %1$d min kvar</string>
+    <string name="chip_speed">%1$s×</string>
+    <string name="chip_sleep_off">Sömntimer: av</string>
+    <string name="chip_sleep">Sömn: %1$d kap.</string>
+    <string name="sleep_off">Av</string>
+    <string name="chip_voice">Röst och språk</string>
+    <string name="chip_rules_on">Aa Textregler på</string>
+    <string name="chip_rules_off">Aa Textregler av</string>
     <string name="resumed_from">fortsätter från stycke %1$d</string>
     <string name="continue_reading">Fortsätt läsa</string>
     <string name="continue_empty">Inga påbörjade kapitel. Kapitel du börjar lyssna på visas här, så att du kan fortsätta från samma stycke.</string>
@@ -24,7 +57,6 @@
 
     <string name="status_loading">Hämtar kapitel…</string>
     <string name="status_position">Stycke %1$d av %2$d</string>
-    <string name="status_chapters_read">%1$d kapitel lästa</string>
 
     <string name="message_chapter_done">Kapitlet är slut.</string>
     <string name="message_no_next_found">Hittade inget nästa kapitel.</string>
@@ -127,11 +159,9 @@
     <string name="pronunciation_from">Ord i texten</string>
     <string name="pronunciation_to">Läs som</string>
     <string name="pronunciation_add">Lägg till regel</string>
-    <string name="rules_toggle">Textregler</string>
     <string name="rules_toggle_hint">Av = texten läses precis som den står (ingen censurrättning, inga filter eller uttalsregler). Inga regler tas bort.</string>
     <string name="rules_global">Textregler i hela appen</string>
     <string name="rules_book">Textregler för den här boken</string>
-    <string name="rules_off_status">textregler av</string>
     <string name="book_rules_title">Uttalsregler för boken</string>
     <string name="book_rules_hint">Gäller bara den här boken (alla dess kapitel) och används före de allmänna reglerna.</string>
     <string name="book_rules_list">Böcker med egna regler</string>
@@ -139,6 +169,7 @@
     <string name="edit">Redigera</string>
     <string name="setting_number_rule">Läs "No." följt av en siffra som "number" (No. 1 → number 1)</string>
     <string name="setting_engine">Motor för talsyntes</string>
+    <string name="engine_default_plain">Telefonens standard</string>
     <string name="engine_default">Telefonens standard (%1$s)</string>
     <string name="setting_language">Språk för uppläsning</string>
     <string name="language_auto">Automatiskt (efter sidans språk)</string>

@@ -32,6 +32,13 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        // ./gradlew testDebugUnitTest -Pscreenshots writes PNGs of the main screens.
+        unitTests.all { test ->
+            test.systemProperty("roborazzi.test.record", if (project.hasProperty("screenshots")) "true" else "false")
+        }
+    }
 }
 
 dependencies {
@@ -49,4 +56,11 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     testImplementation("junit:junit:4.13.2")
+    // Screenshots of the UI on the JVM, to check layouts without a device.
+    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.26.0")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.26.0")
+    testImplementation(platform("androidx.compose:compose-bom:2024.12.01"))
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

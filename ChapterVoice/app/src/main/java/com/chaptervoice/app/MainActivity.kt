@@ -12,7 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
 import com.chaptervoice.app.browser.TabManager
 import com.chaptervoice.app.ui.AppTheme
-import com.chaptervoice.app.ui.ReaderScreen
+import com.chaptervoice.app.ui.AppRoot
 
 class MainActivity : ComponentActivity() {
 
@@ -36,8 +36,8 @@ class MainActivity : ComponentActivity() {
         val settings = AppSettings(this)
         tabs = TabManager(this, settings)
         setContent {
-            AppTheme {
-                ReaderScreen(
+            AppTheme(settings) {
+                AppRoot(
                     settings = settings,
                     tabs = tabs,
                     incomingUrl = incomingUrl.value,

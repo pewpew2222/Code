@@ -49,7 +49,7 @@ import kotlin.math.roundToInt
 
 /** Saved chapters, grouped by site, plus the state of the current download. */
 @Composable
-internal fun DownloadsScreen(onPlay: (String) -> Unit, onClose: () -> Unit) {
+internal fun DownloadsScreen(onPlay: (String) -> Unit, onClose: (() -> Unit)? = null) {
     val context = LocalContext.current
     val store = remember { OfflineStore.get(context) }
     val entries by store.entries.collectAsStateWithLifecycle()
@@ -66,7 +66,7 @@ internal fun DownloadsScreen(onPlay: (String) -> Unit, onClose: () -> Unit) {
                 if (entries.isNotEmpty()) {
                     TextButton(onClick = { confirmDeleteAll = true }) { Text(stringResource(R.string.downloads_delete_all)) }
                 }
-                CloseButton(onClose)
+                onClose?.let { CloseButton(it) }
             }
             Text(
                 stringResource(R.string.downloads_summary, entries.size, Formatter.formatShortFileSize(context, totalBytes)),

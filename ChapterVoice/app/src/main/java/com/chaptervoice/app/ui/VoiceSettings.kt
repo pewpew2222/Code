@@ -66,13 +66,12 @@ internal fun VoiceSettings(settings: AppSettings, onChanged: () -> Unit) {
     Box {
         OutlinedButton(onClick = { showEngines = true }, modifier = Modifier.fillMaxWidth()) {
             Text(
-                if (engine.isEmpty()) stringResource(R.string.engine_default, engineLabel(defaultEngine))
-                else engineLabel(engine),
+                if (engine.isEmpty()) defaultEngineText(engineLabel(defaultEngine)) else engineLabel(engine),
             )
         }
         DropdownMenu(expanded = showEngines, onDismissRequest = { showEngines = false }) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.engine_default, engineLabel(defaultEngine))) },
+                text = { Text(defaultEngineText(engineLabel(defaultEngine))) },
                 onClick = { engine = ""; settings.ttsEngine = ""; showEngines = false; onChanged() },
             )
             engines.forEach { info ->
@@ -168,6 +167,10 @@ internal fun VoiceSettings(settings: AppSettings, onChanged: () -> Unit) {
         }
     }
 }
+
+@Composable
+private fun defaultEngineText(label: String): String =
+    if (label.isBlank()) stringResource(R.string.engine_default_plain) else stringResource(R.string.engine_default, label)
 
 /** "en" matches voices tagged "en-US" and engines that use three letters ("eng"). */
 private fun sameLanguage(locale: Locale, tag: String): Boolean {

@@ -46,6 +46,7 @@ class OfflineStore private constructor(context: Context) {
             pageTitle = o.optString("pageTitle"),
             heading = o.optString("heading"),
             language = o.optString("language").ifEmpty { null },
+            coverUrl = o.optString("cover").ifEmpty { null },
         )
     }.getOrNull()
 
@@ -59,6 +60,7 @@ class OfflineStore private constructor(context: Context) {
             .put("pageTitle", chapter.pageTitle)
             .put("heading", chapter.heading)
             .put("language", chapter.language ?: "")
+            .put("cover", chapter.coverUrl ?: "")
             .toString()
         val file = fileFor(requestedUrl)
         file.writeText(json)

@@ -5,6 +5,10 @@ vidare till nästa kapitel. Gjord för webbnoveller.
 
 ## Funktioner
 
+- **Bibliotek som startsida:** böckerna du lyssnar på, med bokomslag (hämtas från sajten), kapitel och förlopp. Bottenmeny: Bibliotek, Webben, Nedladdat, Inställningar.
+- **Spelare:** minispelare ovanför bottenmenyn och en spelare i helskärm med stycket före/nu/efter, reglage för att hoppa mellan stycken, tid kvar och snabbval (hastighet, sömntimer, röst, textregler). Omslaget visas också på låsskärmen.
+- **Tema:** ljust, mörkt eller följ telefonen, och valbar accentfärg (eller telefonens egna färger).
+
 - Inbyggd webbläsare: gå till ett kapitel och tryck **Läs upp den här sidan**.
 - Plockar ut själva kapiteltexten (tar bort menyer, reklam, kommentarer m.m.).
 - **Nästa kapitel automatiskt**, på något av tre sätt:
@@ -57,7 +61,13 @@ Du kan också öppna mappen `ChapterVoice` i Android Studio.
 | `service/ReaderService.kt` | Uppläsning, mediasession, notis, ljudfokus, automatiskt nästa kapitel |
 | `ui/ReaderScreen.kt` | Webbläsare, spelarpanel och inställningar (Jetpack Compose) |
 
+Skärmdumpar av de viktigaste vyerna kan ritas på datorn (Robolectric + Roborazzi):
+`./gradlew testDebugUnitTest -Pscreenshots` → `app/build/outputs/roborazzi/`.
+
 ## Licenser
+
+Läsfonten Literata (`res/font/literata.ttf`) används under SIL Open Font License 1.1
+(`app/src/main/assets/licenses/Literata-OFL.txt`).
 
 Reklamlistan (`app/src/main/assets/blocklist_hosts.txt`) kommer från
 [StevenBlack/hosts](https://github.com/StevenBlack/hosts) (MIT-licens).

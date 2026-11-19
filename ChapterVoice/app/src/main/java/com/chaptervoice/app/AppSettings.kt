@@ -14,6 +14,9 @@ class AppSettings(context: Context) {
     companion object {
         /** Bumped when a text-rules switch changes, so every screen shows the same state. */
         val rulesSwitches = MutableStateFlow(0)
+
+        /** Bumped when the theme or accent colour changes. */
+        val themeChanges = MutableStateFlow(0)
     }
 
     private val prefs = context.applicationContext.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -149,6 +152,22 @@ class AppSettings(context: Context) {
         bookKey?.let { bookRules(it) }.orEmpty() + pronunciationRules,
         numberRule,
     )
+
+    /** "system", "light" or "dark". */
+    var themeMode: String
+        get() = prefs.getString("theme_mode", "system") ?: "system"
+        set(value) {
+            prefs.edit().putString("theme_mode", value).apply()
+            themeChanges.value++
+        }
+
+    /** Accent colour id (see AppTheme), or "dynamic" for the phone's own colours. */
+    var accent: String
+        get() = prefs.getString("accent", "blue") ?: "blue"
+        set(value) {
+            prefs.edit().putString("accent", value).apply()
+            themeChanges.value++
+        }
 
     /** TTS engine package, e.g. SherpaTTS ("" = the phone's default engine). */
     var ttsEngine: String

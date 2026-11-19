@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.os.Build
@@ -33,12 +34,16 @@ import com.chaptervoice.app.AppSettings
 import com.chaptervoice.app.MainActivity
 import com.chaptervoice.app.R
 import com.chaptervoice.app.core.BookKey
+import com.chaptervoice.app.core.BookNames
+import com.chaptervoice.app.core.CoverFinder
 import com.chaptervoice.app.core.Chapter
 import com.chaptervoice.app.core.ChapterFetcher
 import com.chaptervoice.app.core.ChapterParser
 import com.chaptervoice.app.core.TextChunker
 import com.chaptervoice.app.core.TextCleaner
+import com.chaptervoice.app.data.BookStore
 import com.chaptervoice.app.data.BookmarkStore
+import com.chaptervoice.app.data.ImageCache
 import com.chaptervoice.app.data.DownloadWorker
 import com.chaptervoice.app.data.OfflineStore
 import com.chaptervoice.app.data.ReadingPositions
@@ -71,6 +76,14 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         const val ACTION_PREV_PARAGRAPH = "com.chaptervoice.PREV_PARAGRAPH"
         const val ACTION_NEXT_CHAPTER = "com.chaptervoice.NEXT_CHAPTER"
         const val ACTION_RESTART_CHAPTER = "com.chaptervoice.RESTART_CHAPTER"
+        const val ACTION_SEEK = "com.chaptervoice.SEEK"
+        const val EXTRA_INDEX = "index"
+
+        /** Jump to paragraph [index] (0-based) of the current chapter. */
+        fun seek(context: Context, index: Int) {
+            val intent = Intent(context, ReaderService::class.java).setAction(ACTION_SEEK).putExtra(EXTRA_INDEX, index)
+            ContextCompat.startForegroundService(context, intent)
+        }
         const val ACTION_SETTINGS_CHANGED = "com.chaptervoice.SETTINGS_CHANGED"
         const val ACTION_STOP = "com.chaptervoice.STOP"
         const val EXTRA_URL = "url"
@@ -229,6 +242,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
             ACTION_PREV_PARAGRAPH -> skipParagraph(-1)
             ACTION_NEXT_CHAPTER -> nextChapter()
             ACTION_RESTART_CHAPTER -> restartChapter()
+            ACTION_SEEK -> seekTo(intent.getIntExtra(EXTRA_INDEX, index))
             ACTION_SETTINGS_CHANGED -> onSettingsChanged()
             ACTION_STOP -> stopReading()
         }
@@ -330,16 +344,51 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         val saved = ReadingPositions.get(this).get(requestedUrl ?: loaded.url)
         index = saved?.index?.takeIf { it in 1..pieces.lastIndex } ?: 0
         resumeMessage = if (index > 0) getString(R.string.resumed_from, index + 1) else null
-        mediaSession.setMetadata(
-            MediaMetadataCompat.Builder()
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, loaded.title)
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, hostOf(loaded.url))
-                .build(),
-        )
+        updateLibrary(loaded)
+        updateMetadata(loaded, null)
         prefetchNext(loaded)
         val next = loaded.nextUrl
         if (next != null && settings.preloadCount > 0) DownloadWorker.preload(this, next, settings.preloadCount)
         resume()
+    }
+
+    /** Puts the book at the top of the library and finds its cover if it has none yet. */
+    private fun updateLibrary(loaded: Chapter) {
+        val key = BookKey.of(loaded.url) ?: return
+        val books = BookStore.get(this)
+        books.touch(key, BookNames.guess(key, loaded.pageTitle), requestedUrl ?: loaded.url, loaded.title, loaded.coverUrl)
+        val book = books.get(key) ?: return
+        scope.launch {
+            var cover = book.coverUrl
+            if (cover == null && !book.coverChecked) {
+                // The book's own page (the chapter address without the chapter) nearly always shows the cover.
+                val bookPage = loaded.url.substringBefore("://") + "://" + key
+                cover = withContext(Dispatchers.IO) {
+                    runCatching { CoverFinder.find(fetcher.fetchDocument(bookPage, referrer = loaded.url)) }.getOrNull()
+                }
+                books.setCover(key, cover)
+            }
+            if (cover != null && chapter === loaded) {
+                val art = ImageCache.load(this@ReaderService, cover, referer = loaded.url)
+                if (chapter === loaded) {
+                    updateMetadata(loaded, art)
+                    publishState(ReaderState.state.value.status, ReaderState.state.value.message)
+                }
+            }
+        }
+    }
+
+    /** Title, book and cover for the notification, lock screen and Bluetooth displays. */
+    private fun updateMetadata(loaded: Chapter, art: Bitmap?) {
+        val book = BookKey.of(loaded.url)?.let { BookStore.get(this).get(it) }
+        mediaSession.setMetadata(
+            MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, loaded.title)
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, book?.name ?: hostOf(loaded.url))
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, book?.name ?: "")
+                .apply { if (art != null) putBitmap(MediaMetadataCompat.METADATA_KEY_ART, art) }
+                .build(),
+        )
     }
 
     private fun maxPieceLength(): Int =
@@ -455,6 +504,17 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
             // A short pause between chapters sounds more natural.
             if (playing) delay(600)
             load(next, html = null)
+        }
+    }
+
+    private fun seekTo(target: Int) {
+        if (pieces.isEmpty()) return
+        index = target.coerceIn(0, pieces.lastIndex)
+        if (playing) {
+            speakFrom(index)
+        } else {
+            publishState(ReaderStatus.PAUSED)
+            savePosition()
         }
     }
 
@@ -594,8 +654,16 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         else -> getString(R.string.error_generic, error.message ?: error.javaClass.simpleName)
     }
 
+    /** Rough time left in the chapter: about 900 characters a minute at normal speed. */
+    private fun minutesLeft(): Int {
+        if (pieces.isEmpty()) return 0
+        val chars = pieces.drop(index).sumOf { it.length }
+        return kotlin.math.ceil(chars / (900.0 * settings.speechRate.coerceAtLeast(0.3f))).toInt()
+    }
+
     private fun publishState(status: ReaderStatus, message: String? = null) {
         val current = chapter
+        val book = current?.let { BookKey.of(it.url) }?.let { BookStore.get(this).get(it) }
         ReaderState.update {
             it.copy(
                 status = status,
@@ -606,6 +674,11 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
                 position = if (pieces.isEmpty()) 0 else index + 1,
                 total = pieces.size,
                 currentText = pieces.getOrNull(index).orEmpty(),
+                previousText = pieces.getOrNull(index - 1).orEmpty(),
+                nextText = pieces.getOrNull(index + 1).orEmpty(),
+                minutesLeft = minutesLeft(),
+                bookName = book?.name,
+                coverUrl = book?.coverUrl,
                 message = message,
                 chaptersRead = chaptersRead,
             )

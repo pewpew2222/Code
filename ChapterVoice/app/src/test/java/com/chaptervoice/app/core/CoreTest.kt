@@ -517,3 +517,37 @@ class BookKeyTest {
         assertEquals("site.com/book/12345", BookKey.displayName("site.com/book/12345"))
     }
 }
+
+class BookInfoTest {
+
+    @Test
+    fun findsCoverImageBeforeLogoAndMeta() {
+        val doc = Jsoup.parse(
+            """<head><meta property="og:image" content="/img/site-logo.png"></head>
+               <body><img src="/logo.png"><div class="book-cover"><img data-src="/covers/cma.jpg" src="/loading.gif"></div></body>""",
+            "https://site.com/novel/cma",
+        )
+        assertEquals("https://site.com/covers/cma.jpg", CoverFinder.find(doc))
+    }
+
+    @Test
+    fun fallsBackToOpenGraphImageButNotLogos() {
+        val og = Jsoup.parse("""<head><meta property="og:image" content="https://cdn.site.com/novel/cma.webp"></head>""", "https://site.com/x")
+        assertEquals("https://cdn.site.com/novel/cma.webp", CoverFinder.find(og))
+        val logoOnly = Jsoup.parse("""<head><meta property="og:image" content="https://site.com/logo.png"></head>""", "https://site.com/x")
+        assertNull(CoverFinder.find(logoOnly))
+    }
+
+    @Test
+    fun guessesBookNames() {
+        assertEquals(
+            "Complete Martial Arts Attributes",
+            BookNames.guess("empirenovel.com/novel/complete-martial-arts-attributes", "whatever"),
+        )
+        assertEquals(
+            "Shadow Slave",
+            BookNames.guess("site.com/book/12345", "Shadow Slave Chapter 1203: Dark Sea - NovelSite"),
+        )
+        assertEquals("Lord of Mysteries", BookNames.guess("site.com/book/9", "Lord of Mysteries - Ch. 88 | Reader"))
+    }
+}

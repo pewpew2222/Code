@@ -14,6 +14,8 @@ data class Chapter(
     val heading: String = title,
     /** Language tag of the text ("en", "zh", ...), or null if unknown. */
     val language: String? = null,
+    /** The book's cover image, when the chapter page shows it. */
+    val coverUrl: String? = null,
 ) {
     val textFingerprint: Int get() = paragraphs.joinToString("\n").hashCode()
 }
@@ -31,6 +33,7 @@ object ChapterParser {
             pageTitle = pageTitle,
             heading = extracted.title,
             language = LanguageDetector.detect(doc.selectFirst("html")?.attr("lang"), extracted.paragraphs),
+            coverUrl = CoverFinder.find(doc),
         )
     }
 
@@ -46,6 +49,14 @@ class ChapterFetcher(
     private val userAgent: String,
     private val cookieProvider: (String) -> String? = { null },
 ) {
+    /** Any page, e.g. a book's own page to find its cover. */
+    fun fetchDocument(url: String, referrer: String? = null): Document {
+        val connection = Jsoup.connect(url).userAgent(userAgent).timeout(20_000).followRedirects(true)
+        referrer?.let { connection.referrer(it) }
+        cookieProvider(url)?.takeIf { it.isNotBlank() }?.let { connection.header("Cookie", it) }
+        return connection.get()
+    }
+
     fun fetch(url: String, mode: NextMode, referrer: String? = null): Chapter {
         val connection = Jsoup.connect(url)
             .userAgent(userAgent)
