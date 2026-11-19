@@ -177,13 +177,15 @@ private fun RefreshableWebView(tab: BrowserTab) {
     val background = MaterialTheme.colorScheme.surfaceContainerHigh.toArgb()
     AndroidView(
         factory = { context ->
+            // SwipeRefreshLayout already holds its spinner as child 0, so the page's
+            // container is found by type, never by position.
             SwipeRefreshLayout(context).apply {
                 addView(FrameLayout(context), ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             }
         },
         modifier = Modifier.fillMaxSize(),
         update = { layout ->
-            val container = layout.getChildAt(0) as FrameLayout
+            val container = layout.pageContainer() ?: return@AndroidView
             val webView = tab.webView
             if (container.getChildAt(0) !== webView) {
                 container.removeAllViews()
@@ -197,9 +199,12 @@ private fun RefreshableWebView(tab: BrowserTab) {
             layout.setOnRefreshListener { tab.reload() }
             if (layout.isRefreshing && tab.progress >= 100) layout.isRefreshing = false
         },
-        onRelease = { layout -> (layout.getChildAt(0) as? FrameLayout)?.removeAllViews() },
+        onRelease = { layout -> layout.pageContainer()?.removeAllViews() },
     )
 }
+
+private fun SwipeRefreshLayout.pageContainer(): FrameLayout? =
+    (0 until childCount).map { getChildAt(it) }.firstOrNull { it is FrameLayout } as FrameLayout?
 
 /** A thin strip at a screen edge: swipe inwards to go back (left) or forward (right). */
 @Composable
