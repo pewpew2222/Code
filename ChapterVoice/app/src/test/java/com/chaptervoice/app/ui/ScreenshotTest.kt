@@ -89,6 +89,23 @@ class ScreenshotTest {
         }
     }
 
+    @Test fun bottomBarDark() = shoot("bottom_bar_dark", dark = true) {
+        Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.Bottom) {
+            androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+            MiniPlayer(state) {}
+            FloatingNavBar(
+                entries = listOf(
+                    NavEntry(com.chaptervoice.app.R.drawable.ic_library, "Bibliotek"),
+                    NavEntry(com.chaptervoice.app.R.drawable.ic_web, "Webben"),
+                    NavEntry(com.chaptervoice.app.R.drawable.ic_download, "Nedladdat"),
+                    NavEntry(com.chaptervoice.app.R.drawable.ic_settings, "Inställningar"),
+                ),
+                selected = 1,
+                onSelect = {},
+            )
+        }
+    }
+
     @Test fun libraryEmptyLight() = shoot("library_empty_light", dark = false, accent = "green") {
         LibraryScreen(emptyList(), emptyList(), emptyList(), emptyList(), {}, {}, {}, {}, {})
     }

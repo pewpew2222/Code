@@ -95,12 +95,16 @@ internal fun LibraryScreen(
                 }
             } else {
                 item { SectionLabel(stringResource(R.string.continue_listening)) }
-                item {
+                item(key = "first-" + books.first().key) {
                     val first = books.first()
-                    ContinueCard(first, positionOf(first), onContinue = { onContinue(first) }, onRemove = { onRemoveBook(first) })
+                    Box(Modifier.animateItem()) {
+                        ContinueCard(first, positionOf(first), onContinue = { onContinue(first) }, onRemove = { onRemoveBook(first) })
+                    }
                 }
                 items(books.drop(1), key = { it.key }) { book ->
-                    BookRow(book, positionOf(book), onContinue = { onContinue(book) }, onRemove = { onRemoveBook(book) })
+                    Box(Modifier.animateItem()) {
+                        BookRow(book, positionOf(book), onContinue = { onContinue(book) }, onRemove = { onRemoveBook(book) })
+                    }
                 }
             }
 

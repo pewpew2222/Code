@@ -1,10 +1,17 @@
 package com.chaptervoice.app.ui
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.activity.compose.BackHandler
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -16,8 +23,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -111,7 +116,17 @@ fun AppRoot(
         ) {
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f).fillMaxWidth()) {
-                    when (nav.section) {
+                    AnimatedContent(
+                        targetState = nav.section,
+                        transitionSpec = {
+                            // Slide a little in the direction of the tab, and fade.
+                            val dir = if (targetState.ordinal > initialState.ordinal) 1 else -1
+                            (slideInHorizontally(tween(260)) { it / 10 * dir } + fadeIn(tween(220))) togetherWith
+                                (slideOutHorizontally(tween(200)) { -it / 10 * dir } + fadeOut(tween(160)))
+                        },
+                        label = "section",
+                    ) { section ->
+                    when (section) {
                         Section.LIBRARY -> LibraryScreen(
                             books = books,
                             positions = positions,
@@ -146,24 +161,34 @@ fun AppRoot(
                         )
                         Section.SETTINGS -> SettingsScreen(settings = settings, onChanged = { settingsChanged() })
                     }
+                    }
                 }
 
-                if (reading) {
+                AnimatedVisibility(
+                    visible = reading,
+                    enter = slideInVertically { it } + fadeIn(),
+                    exit = slideOutVertically { it } + fadeOut(),
+                ) {
                     MiniPlayer(state = state, onOpen = { nav.playerOpen = true })
                 }
 
-                NavigationBar(tonalElevation = 0.dp, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    NavItem(nav, Section.LIBRARY, R.drawable.ic_library, R.string.nav_library)
-                    NavItem(nav, Section.WEB, R.drawable.ic_web, R.string.nav_web)
-                    NavItem(nav, Section.DOWNLOADS, R.drawable.ic_download, R.string.nav_downloads)
-                    NavItem(nav, Section.SETTINGS, R.drawable.ic_settings, R.string.nav_settings)
-                }
+                val sections = Section.entries
+                FloatingNavBar(
+                    entries = listOf(
+                        NavEntry(R.drawable.ic_library, stringResource(R.string.nav_library)),
+                        NavEntry(R.drawable.ic_web, stringResource(R.string.nav_web)),
+                        NavEntry(R.drawable.ic_download, stringResource(R.string.nav_downloads)),
+                        NavEntry(R.drawable.ic_settings, stringResource(R.string.nav_settings)),
+                    ),
+                    selected = sections.indexOf(nav.section),
+                    onSelect = { nav.section = sections[it] },
+                )
             }
 
             AnimatedVisibility(
                 visible = nav.playerOpen && reading,
-                enter = slideInVertically { it },
-                exit = slideOutVertically { it },
+                enter = slideInVertically(spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)) { it } + fadeIn(),
+                exit = slideOutVertically(tween(220)) { it } + fadeOut(tween(220)),
             ) {
                 NowPlayingScreen(
                     state = state,
@@ -189,19 +214,4 @@ fun AppRoot(
 @Composable
 private fun BookRulesFor(settings: AppSettings, key: String?, onChanged: () -> Unit, onDismiss: () -> Unit) {
     if (key != null) BookRulesDialog(settings = settings, bookKey = key, onChanged = onChanged, onDismiss = onDismiss)
-}
-
-@Composable
-private fun androidx.compose.foundation.layout.RowScope.NavItem(
-    nav: AppNav,
-    section: Section,
-    @DrawableRes icon: Int,
-    @StringRes label: Int,
-) {
-    NavigationBarItem(
-        selected = nav.section == section,
-        onClick = { nav.section = section },
-        icon = { Icon(painterResource(icon), contentDescription = null) },
-        label = { Text(stringResource(label)) },
-    )
 }

@@ -1,5 +1,6 @@
 package com.chaptervoice.app.ui
 
+import androidx.compose.animation.core.animateFloatAsState
 import kotlinx.coroutines.delay
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.Icons
@@ -78,63 +79,64 @@ internal fun MiniPlayer(state: ReaderUiState, onOpen: () -> Unit) {
     val context = LocalContext.current
     val playing = state.status == ReaderStatus.PLAYING
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        shape = RoundedCornerShape(18.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(onClickLabel = stringResource(R.string.player_open), onClick = onOpen),
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .pressable(onClick = onOpen),
     ) {
-        Column {
-            val progress = if (state.total > 0) state.position / state.total.toFloat() else 0f
-            if (state.status == ReaderStatus.LOADING) {
-                LinearProgressIndicator(Modifier.fillMaxWidth().height(3.dp))
-            } else {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxWidth().height(3.dp),
-                    drawStopIndicator = {},
-                    gapSize = 0.dp,
-                )
-            }
+        Box {
             Row(
-                Modifier.padding(start = 10.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+                Modifier.padding(start = 8.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                BookCover(state.bookName ?: state.chapterTitle.orEmpty(), state.coverUrl, 40.dp, 54.dp)
+                BookCover(state.bookName ?: state.chapterTitle.orEmpty(), state.coverUrl, 34.dp, 46.dp)
                 Column(Modifier.weight(1f)) {
                     Text(
                         state.chapterTitle ?: stringResource(R.string.status_loading),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         miniStatus(state),
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelMedium,
                         color = if (state.status == ReaderStatus.ERROR) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                FilledIconButton(
+                IconButton(
                     onClick = { ReaderService.send(context, ReaderService.ACTION_TOGGLE) },
                     enabled = state.status != ReaderStatus.LOADING,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(42.dp),
                 ) {
-                    Icon(
-                        painterResource(if (playing) R.drawable.ic_pause else R.drawable.ic_play),
-                        contentDescription = stringResource(if (playing) R.string.action_pause else R.string.action_play),
-                    )
+                    PlayPauseIcon(playing, stringResource(if (playing) R.string.action_pause else R.string.action_play), 26.dp)
                 }
-                IconButton(onClick = { ReaderService.send(context, ReaderService.ACTION_NEXT_CHAPTER) }) {
-                    Icon(painterResource(R.drawable.ic_skip_next), contentDescription = stringResource(R.string.action_next_chapter))
+                IconButton(
+                    onClick = { ReaderService.send(context, ReaderService.ACTION_NEXT_CHAPTER) },
+                    modifier = Modifier.size(42.dp),
+                ) {
+                    Icon(painterResource(R.drawable.ic_skip_next), contentDescription = stringResource(R.string.action_next_chapter), modifier = Modifier.size(22.dp))
                 }
             }
+            // Thin progress line along the bottom edge.
+            val progress by animateFloatAsState(
+                if (state.total > 0) state.position / state.total.toFloat() else 0f,
+                label = "miniProgress",
+            )
+            Box(
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth(progress)
+                    .height(2.dp)
+                    .background(MaterialTheme.colorScheme.primary),
+            )
         }
     }
 }
@@ -310,11 +312,7 @@ internal fun NowPlayingScreen(
                     enabled = state.status != ReaderStatus.LOADING,
                     modifier = Modifier.size(64.dp),
                 ) {
-                    Icon(
-                        painterResource(if (playing) R.drawable.ic_pause else R.drawable.ic_play),
-                        contentDescription = stringResource(if (playing) R.string.action_pause else R.string.action_play),
-                        modifier = Modifier.size(30.dp),
-                    )
+                    PlayPauseIcon(playing, stringResource(if (playing) R.string.action_pause else R.string.action_play), 30.dp)
                 }
                 BigControl(R.drawable.ic_fast_forward, R.string.action_next_paragraph) { command(ReaderService.ACTION_NEXT_PARAGRAPH) }
                 BigControl(R.drawable.ic_skip_next, R.string.action_next_chapter) { command(ReaderService.ACTION_NEXT_CHAPTER) }

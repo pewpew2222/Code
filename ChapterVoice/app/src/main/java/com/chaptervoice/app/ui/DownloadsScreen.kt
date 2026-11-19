@@ -1,5 +1,14 @@
 package com.chaptervoice.app.ui
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.AnimatedVisibility
 import com.chaptervoice.app.data.BookStore
 import com.chaptervoice.app.core.BookNames
 import com.chaptervoice.app.core.BookKey
@@ -119,7 +128,8 @@ internal fun DownloadsScreen(onPlay: (String) -> Unit, onClose: (() -> Unit)? = 
                 groups.forEach { group ->
                     val open = group.key in expanded
                     item(key = "b-" + group.key) {
-                        Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(20.dp)) {
+                        Surface(
+                            modifier = Modifier.animateItem(),color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(20.dp)) {
                             Column {
                                 Row(
                                     Modifier
@@ -151,16 +161,23 @@ internal fun DownloadsScreen(onPlay: (String) -> Unit, onClose: (() -> Unit)? = 
                                     IconButton(onClick = { group.chapters.forEach { store.remove(it.url) } }) {
                                         Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.downloads_delete_book))
                                     }
+                                    val rotation by animateFloatAsState(if (open) 180f else 0f, Motion.snappy, label = "chevron")
                                     Icon(
                                         painterResource(R.drawable.ic_chevron_down),
                                         contentDescription = null,
-                                        modifier = Modifier.rotate(if (open) 180f else 0f),
+                                        modifier = Modifier.rotate(rotation),
                                     )
                                 }
-                                if (open) {
-                                    group.chapters.forEach { entry ->
-                                        HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
-                                        ChapterRow(entry, onPlay, onDelete = { store.remove(entry.url) })
+                                AnimatedVisibility(
+                                    visible = open,
+                                    enter = expandVertically(spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(),
+                                    exit = shrinkVertically(tween(200)) + fadeOut(tween(150)),
+                                ) {
+                                    Column {
+                                        group.chapters.forEach { entry ->
+                                            HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                                            ChapterRow(entry, onPlay, onDelete = { store.remove(entry.url) })
+                                        }
                                     }
                                 }
                             }
