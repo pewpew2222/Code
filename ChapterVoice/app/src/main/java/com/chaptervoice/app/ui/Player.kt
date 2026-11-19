@@ -271,6 +271,7 @@ internal fun NowPlayingScreen(
                 var dragging by remember { mutableStateOf<Float?>(null) }
                 val last = (state.total - 1).coerceAtLeast(1)
                 Slider(
+                    colors = neutralSliderColors(),
                     value = dragging ?: (state.position - 1).coerceAtLeast(0).toFloat(),
                     onValueChange = { dragging = it },
                     onValueChangeFinished = {
@@ -363,6 +364,7 @@ internal fun NowPlayingScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
             Slider(
+                colors = neutralSliderColors(),
                 value = speed,
                 onValueChange = { speed = (it * 10).roundToInt() / 10f },
                 onValueChangeFinished = { settings.speechRate = speed; settingsChanged() },

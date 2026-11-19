@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -121,7 +122,7 @@ internal fun SliderRow(
             Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             Text(valueText, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
         }
-        Slider(value = value, onValueChange = onChange, onValueChangeFinished = onDone, valueRange = range)
+        Slider(value = value, onValueChange = onChange, onValueChangeFinished = onDone, valueRange = range, colors = neutralSliderColors())
     }
 }
 
@@ -187,3 +188,10 @@ internal fun <T> ChoiceSheet(
 internal fun GroupBlock(content: @Composable ColumnScope.() -> Unit) {
     Box(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { Column(content = content) }
 }
+
+/** Accent for the filled part and the thumb; the empty part stays neutral grey. */
+@Composable
+internal fun neutralSliderColors() = SliderDefaults.colors(
+    inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+    inactiveTickColor = MaterialTheme.colorScheme.onSurfaceVariant,
+)
