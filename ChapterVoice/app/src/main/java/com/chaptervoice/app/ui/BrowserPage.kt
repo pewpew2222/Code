@@ -196,8 +196,27 @@ private fun RefreshableWebView(tab: BrowserTab) {
             layout.setProgressBackgroundColorSchemeColor(background)
             // Only pull to refresh at the very top of the page.
             layout.setOnChildScrollUpCallback { _, _ -> webView.canScrollVertically(-1) || webView.scrollY > 0 }
-            layout.setOnRefreshListener { tab.reload() }
-            if (layout.isRefreshing && tab.progress >= 100) layout.isRefreshing = false
+            // A long, deliberate pull: the default (64 dp) triggered while just scrolling up.
+            val density = layout.resources.displayMetrics.density
+            layout.setDistanceToTriggerSync((170 * density).toInt())
+            layout.setSlingshotDistance((200 * density).toInt())
+            layout.setOnRefreshListener {
+                tab.reload()
+                // Hide the spinner once the page has loaded (or after 10 s at most). Checked
+                // here because a quick reload may never show the page as "loading".
+                val started = android.os.SystemClock.uptimeMillis()
+                val check = object : Runnable {
+                    override fun run() {
+                        val elapsed = android.os.SystemClock.uptimeMillis() - started
+                        if ((elapsed > 600 && tab.progress >= 100) || elapsed > 10_000 || !layout.isAttachedToWindow) {
+                            layout.isRefreshing = false
+                        } else {
+                            layout.postDelayed(this, 250)
+                        }
+                    }
+                }
+                layout.postDelayed(check, 250)
+            }
         },
         onRelease = { layout -> layout.pageContainer()?.removeAllViews() },
     )
