@@ -56,6 +56,7 @@ import com.chaptervoice.app.browser.BrowserTab
 import com.chaptervoice.app.data.Bookmark
 import com.chaptervoice.app.data.HistoryEntry
 import com.chaptervoice.app.data.QuickSites
+import com.chaptervoice.app.data.ReadingPosition
 import java.util.Calendar
 
 // ------------------------------------------------------------------------ tabs
@@ -259,12 +260,28 @@ private fun dayLabel(context: android.content.Context, time: Long, today: String
 // ------------------------------------------------------------------------ start page
 
 private const val BOOKMARKS_CHIP = "bookmarks"
+private const val CONTINUE_CHIP = "continue"
 
 /** Shown in a new, empty tab: quick navigation to bookmarks and web novel sites. */
 @Composable
-internal fun StartPage(bookmarks: List<Bookmark>, onOpen: (String) -> Unit) {
+internal fun StartPage(
+    bookmarks: List<Bookmark>,
+    positions: List<ReadingPosition>,
+    onOpen: (String) -> Unit,
+    onContinue: (String) -> Unit,
+    onForgetPosition: (String) -> Unit,
+) {
     var query by rememberSaveable { mutableStateOf("") }
-    var selected by rememberSaveable { mutableStateOf(if (bookmarks.isNotEmpty()) BOOKMARKS_CHIP else QuickSites.groups.first().id) }
+    var selected by rememberSaveable {
+        mutableStateOf(
+            when {
+                positions.isNotEmpty() -> CONTINUE_CHIP
+                bookmarks.isNotEmpty() -> BOOKMARKS_CHIP
+                else -> QuickSites.groups.first().id
+            },
+        )
+    }
+    val shownPositions = if (selected == CONTINUE_CHIP && query.isBlank()) positions else emptyList()
 
     val q = query.trim()
     val group = QuickSites.groups.firstOrNull { it.id == selected }
@@ -290,6 +307,13 @@ internal fun StartPage(bookmarks: List<Bookmark>, onOpen: (String) -> Unit) {
                 ) {
                     item {
                         FilterChip(
+                            selected = selected == CONTINUE_CHIP && q.isEmpty(),
+                            onClick = { selected = CONTINUE_CHIP; query = "" },
+                            label = { Text("▶ " + stringResource(R.string.continue_reading) + " ${positions.size}") },
+                        )
+                    }
+                    item {
+                        FilterChip(
                             selected = selected == BOOKMARKS_CHIP && q.isEmpty(),
                             onClick = { selected = BOOKMARKS_CHIP; query = "" },
                             label = { Text("★ " + stringResource(R.string.bookmarks) + " ${bookmarks.size}") },
@@ -303,6 +327,26 @@ internal fun StartPage(bookmarks: List<Bookmark>, onOpen: (String) -> Unit) {
                         )
                     }
                 }
+            }
+            if (selected == CONTINUE_CHIP && q.isEmpty()) {
+                if (shownPositions.isEmpty()) {
+                    item { EmptyText(stringResource(R.string.continue_empty)) }
+                } else {
+                    item { Spacer(Modifier.height(12.dp)) }
+                }
+                groupedCard(shownPositions, key = { "p-" + it.url }) { position ->
+                    PageRow(
+                        host = position.host,
+                        title = position.title.ifBlank { position.url },
+                        subtitle = stringResource(R.string.position_of, position.host, position.index + 1, position.total),
+                        onClick = { onContinue(position.url) },
+                    ) {
+                        IconButton(onClick = { onForgetPosition(position.url) }) {
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.delete))
+                        }
+                    }
+                }
+                return@LazyColumn
             }
             item {
                 val count = shownBookmarks.size + shownSites.size

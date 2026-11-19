@@ -59,6 +59,7 @@ import com.chaptervoice.app.browser.TabManager
 import com.chaptervoice.app.data.BookmarkStore
 import com.chaptervoice.app.data.DownloadWorker
 import com.chaptervoice.app.data.HistoryStore
+import com.chaptervoice.app.data.ReadingPositions
 import com.chaptervoice.app.service.ReaderService
 import com.chaptervoice.app.service.ReaderState
 import com.chaptervoice.app.service.ReaderStatus
@@ -78,6 +79,8 @@ fun ReaderScreen(
     val state by ReaderState.state.collectAsStateWithLifecycle()
     val bookmarkStore = remember { BookmarkStore.get(context) }
     val bookmarks by bookmarkStore.items.collectAsStateWithLifecycle()
+    val positionStore = remember { ReadingPositions.get(context) }
+    val positions by positionStore.items.collectAsStateWithLifecycle()
     val historyStore = remember { HistoryStore.get(context) }
     val history by historyStore.items.collectAsStateWithLifecycle()
 
@@ -253,7 +256,15 @@ fun ReaderScreen(
                 )
                 active.url.isEmpty() -> StartPage(
                     bookmarks = bookmarks,
+                    positions = positions,
                     onOpen = { open(it) },
+                    onContinue = { url ->
+                        // Open the chapter here and read on from the saved paragraph.
+                        open(url)
+                        readerTabId = active.id
+                        ReaderService.send(context, ReaderService.ACTION_PLAY_URL, url)
+                    },
+                    onForgetPosition = { positionStore.remove(it) },
                 )
                 else -> Column {
                     if (tabs.pickTabId == active.id) {

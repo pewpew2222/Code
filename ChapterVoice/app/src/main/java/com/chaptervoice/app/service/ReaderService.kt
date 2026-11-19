@@ -40,6 +40,7 @@ import com.chaptervoice.app.core.TextCleaner
 import com.chaptervoice.app.data.BookmarkStore
 import com.chaptervoice.app.data.DownloadWorker
 import com.chaptervoice.app.data.OfflineStore
+import com.chaptervoice.app.data.ReadingPositions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -328,7 +329,10 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
             addAll(loaded.paragraphs)
         }.map { TextCleaner.clean(it, loaded.language) }.filter { it.isNotBlank() }
         pieces = TextChunker.chunk(text, maxPieceLength())
-        index = 0
+        // Continue where reading stopped last time in this chapter, if it was started before.
+        val saved = ReadingPositions.get(this).get(requestedUrl ?: loaded.url)
+        index = saved?.index?.takeIf { it in 1..pieces.lastIndex } ?: 0
+        resumeMessage = if (index > 0) getString(R.string.resumed_from, index + 1) else null
         mediaSession.setMetadata(
             MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, loaded.title)
@@ -406,8 +410,21 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
 
     private fun onPieceStarted(id: String) {
         val i = parseId(id) ?: return
+        val changed = i != index
         index = i
-        publishState(ReaderStatus.PLAYING)
+        publishState(ReaderStatus.PLAYING, if (changed) null else resumeMessage)
+        if (changed) resumeMessage = null
+        savePosition()
+    }
+
+    /** "Continuing from paragraph N", shown until the next paragraph starts. */
+    private var resumeMessage: String? = null
+
+    /** Remembers the paragraph reached, so reading can continue here after a restart. */
+    private fun savePosition() {
+        val current = chapter ?: return
+        val key = requestedUrl ?: current.url
+        ReadingPositions.get(this).save(key, current.title, index, pieces.size)
     }
 
     private fun onPieceDone(id: String) {
@@ -417,6 +434,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
 
     private fun onChapterFinished() {
         chaptersRead++
+        listOfNotNull(requestedUrl, chapter?.url).forEach { ReadingPositions.get(this).remove(it) }
         if (settings.deleteAfterRead) {
             listOfNotNull(requestedUrl, chapter?.url).forEach { OfflineStore.get(this).remove(it) }
         }

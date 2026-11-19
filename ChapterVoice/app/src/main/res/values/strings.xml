@@ -11,6 +11,10 @@
 
     <string name="action_play">Spela</string>
     <string name="action_pause">Pausa</string>
+    <string name="resumed_from">fortsätter från stycke %1$d</string>
+    <string name="continue_reading">Fortsätt läsa</string>
+    <string name="continue_empty">Inga påbörjade kapitel. Kapitel du börjar lyssna på visas här, så att du kan fortsätta från samma stycke.</string>
+    <string name="position_of">%1$s · stycke %2$d av %3$d</string>
     <string name="go_to_reading_page">Gå till sidan som läses upp</string>
     <string name="action_restart_chapter">Starta om kapitlet</string>
     <string name="action_prev_paragraph">Föregående stycke</string>

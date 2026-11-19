@@ -141,5 +141,6 @@ private fun statusLine(state: ReaderUiState): String = when (state.status) {
             append(stringResource(R.string.status_chapters_read, state.chaptersRead))
         }
         state.warning?.let { append(" · ").append(it) }
+        state.message?.let { append(" · ").append(it) }
     }
 }
