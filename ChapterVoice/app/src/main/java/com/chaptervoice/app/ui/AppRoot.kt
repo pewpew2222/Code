@@ -39,6 +39,7 @@ import com.chaptervoice.app.AppSettings
 import com.chaptervoice.app.R
 import com.chaptervoice.app.browser.TabManager
 import com.chaptervoice.app.core.BookKey
+import com.chaptervoice.app.core.BookNames
 import com.chaptervoice.app.data.BookStore
 import com.chaptervoice.app.data.BookmarkStore
 import com.chaptervoice.app.data.OfflineStore
@@ -98,6 +99,20 @@ fun AppRoot(
         nav.section = Section.WEB
     }
 
+    // Books read before the library existed: bring them in from saved positions and downloads.
+    LaunchedEffect(Unit) {
+        val store = BookStore.get(context)
+        positions.forEach { position ->
+            val key = BookKey.of(position.url) ?: return@forEach
+            store.addIfMissing(key, BookNames.guess(key, position.title), position.url, position.title, position.updatedAt)
+        }
+        downloads.groupBy { BookKey.of(it.url) }.forEach { (key, entries) ->
+            if (key == null) return@forEach
+            val first = entries.minByOrNull { it.title.let { t -> Regex("\\d+").find(t)?.value?.toIntOrNull() ?: Int.MAX_VALUE } } ?: return@forEach
+            store.addIfMissing(key, BookNames.guess(key, first.title), first.url, first.title, entries.maxOf { it.savedAt })
+        }
+    }
+
     LaunchedEffect(incomingUrl) {
         if (incomingUrl != null) nav.section = Section.WEB
     }
@@ -144,6 +159,7 @@ fun AppRoot(
                                 nav.section = Section.WEB
                             },
                             onOpenDownloads = { nav.section = Section.DOWNLOADS },
+                            scrollToTop = nav.reselects[Section.LIBRARY] ?: 0,
                         )
                         Section.WEB -> ReaderScreen(
                             settings = settings,
@@ -158,8 +174,13 @@ fun AppRoot(
                                 ReaderService.send(context, ReaderService.ACTION_PLAY_URL, url)
                                 nav.playerOpen = true
                             },
+                            scrollToTop = nav.reselects[Section.DOWNLOADS] ?: 0,
                         )
-                        Section.SETTINGS -> SettingsScreen(settings = settings, onChanged = { settingsChanged() })
+                        Section.SETTINGS -> SettingsScreen(
+                            settings = settings,
+                            onChanged = { settingsChanged() },
+                            scrollToTop = nav.reselects[Section.SETTINGS] ?: 0,
+                        )
                     }
                     }
                 }
@@ -181,7 +202,20 @@ fun AppRoot(
                         NavEntry(R.drawable.ic_settings, stringResource(R.string.nav_settings)),
                     ),
                     selected = sections.indexOf(nav.section),
-                    onSelect = { nav.section = sections[it] },
+                    onSelect = {
+                        val chosen = sections[it]
+                        if (chosen != nav.section) {
+                            nav.section = chosen
+                        } else {
+                            // Tapping the open section again: a fresh start page in Web, top of the page elsewhere.
+                            if (chosen == Section.WEB && tabs.active.url.isNotEmpty()) {
+                                val empty = tabs.tabs.firstOrNull { tab -> tab.url.isEmpty() }
+                                tabs.active.captureThumbnail()
+                                if (empty != null) tabs.select(empty.id) else tabs.newTab()
+                            }
+                            nav.reselect(chosen)
+                        }
+                    },
                 )
             }
 

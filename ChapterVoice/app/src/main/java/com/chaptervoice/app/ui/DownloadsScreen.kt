@@ -1,5 +1,6 @@
 package com.chaptervoice.app.ui
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -66,7 +67,9 @@ import kotlin.math.roundToInt
 
 /** Saved chapters, grouped by site, plus the state of the current download. */
 @Composable
-internal fun DownloadsScreen(onPlay: (String) -> Unit, onClose: (() -> Unit)? = null) {
+internal fun DownloadsScreen(onPlay: (String) -> Unit, onClose: (() -> Unit)? = null, scrollToTop: Int = 0) {
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    LaunchedEffect(scrollToTop) { if (scrollToTop > 0) listState.animateScrollToItem(0) }
     val context = LocalContext.current
     val store = remember { OfflineStore.get(context) }
     val entries by store.entries.collectAsStateWithLifecycle()
@@ -122,6 +125,7 @@ internal fun DownloadsScreen(onPlay: (String) -> Unit, onClose: (() -> Unit)? = 
                 return@Column
             }
             LazyColumn(
+                state = listState,
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {

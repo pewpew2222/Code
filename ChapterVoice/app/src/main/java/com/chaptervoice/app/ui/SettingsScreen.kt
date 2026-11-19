@@ -37,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -70,11 +71,13 @@ private val LANGUAGES = listOf("auto", "en", "sv", "zh", "ko", "ja")
 private val SLEEP_OPTIONS = listOf(0, 1, 2, 3, 5, 10, 20)
 
 @Composable
-internal fun SettingsScreen(settings: AppSettings, onChanged: () -> Unit) {
+internal fun SettingsScreen(settings: AppSettings, onChanged: () -> Unit, scrollToTop: Int = 0) {
+    val scroll = rememberScrollState()
+    LaunchedEffect(scrollToTop) { if (scrollToTop > 0) scroll.animateScrollTo(0) }
     Surface(Modifier.fillMaxSize()) {
         Column(
             Modifier
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             Text(

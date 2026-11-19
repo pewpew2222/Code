@@ -44,6 +44,14 @@ class BookStore private constructor(context: Context) {
         save(listOf(book) + mutable.value.filterNot { it.key == key })
     }
 
+    /** Adds a book found elsewhere (older reading positions, downloads) unless it is known. */
+    @Synchronized
+    fun addIfMissing(key: String, name: String, chapterUrl: String, chapterTitle: String, readAt: Long) {
+        if (get(key) != null) return
+        val book = Book(key, name, null, false, chapterUrl, chapterTitle, readAt)
+        save((mutable.value + book).sortedByDescending { it.updatedAt })
+    }
+
     @Synchronized
     fun setCover(key: String, coverUrl: String?) {
         save(mutable.value.map { if (it.key == key) it.copy(coverUrl = coverUrl ?: it.coverUrl, coverChecked = true) else it })

@@ -39,6 +39,8 @@
     <string name="undo">Ångra</string>
     <string name="tab_open">Öppna fliken</string>
     <string name="tab_reading_badge">Läses upp</string>
+    <string name="all_books">Alla böcker (%1$d)</string>
+    <string name="chapter_short">Kap. %1$s</string>
     <string name="library">Bibliotek</string>
     <string name="library_welcome_title">Välkommen!</string>
     <string name="library_welcome_text">Öppna en webbnovell under Webben och tryck på Läs upp. Böckerna du lyssnar på hamnar här, så att du kan fortsätta där du slutade.</string>

@@ -1,5 +1,13 @@
 package com.chaptervoice.app.ui
 
+import android.text.format.DateUtils
+import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.lazy.rememberLazyListState
 import android.text.format.Formatter
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -65,12 +73,16 @@ internal fun LibraryScreen(
     onOpenUrl: (String) -> Unit,
     onSearch: () -> Unit,
     onOpenDownloads: () -> Unit,
+    scrollToTop: Int = 0,
 ) {
     val context = LocalContext.current
+    val listState = rememberLazyListState()
+    LaunchedEffect(scrollToTop) { if (scrollToTop > 0) listState.animateScrollToItem(0) }
     fun positionOf(book: Book) = positions.firstOrNull { BookmarkStore.sameUrl(it.url, book.lastChapterUrl) }
 
     Surface(Modifier.fillMaxSize()) {
         LazyColumn(
+            state = listState,
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -101,9 +113,16 @@ internal fun LibraryScreen(
                         ContinueCard(first, positionOf(first), onContinue = { onContinue(first) }, onRemove = { onRemoveBook(first) })
                     }
                 }
-                items(books.drop(1), key = { it.key }) { book ->
-                    Box(Modifier.animateItem()) {
-                        BookRow(book, positionOf(book), onContinue = { onContinue(book) }, onRemove = { onRemoveBook(book) })
+                // Every book read, most recent first, as a shelf of covers.
+                item { SectionLabel(stringResource(R.string.all_books, books.size), Modifier.padding(top = 8.dp)) }
+                items(books.chunked(3), key = { row -> "shelf-" + row.first().key }) { row ->
+                    BoxWithConstraints(Modifier.animateItem()) {
+                        val itemWidth = (maxWidth - 24.dp) / 3
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            row.forEach { book ->
+                                ShelfBook(book, positionOf(book), itemWidth, onContinue = { onContinue(book) }, onRemove = { onRemoveBook(book) })
+                            }
+                        }
                     }
                 }
             }
@@ -228,21 +247,42 @@ private fun ContinueCard(book: Book, position: ReadingPosition?, onContinue: () 
     }
 }
 
+/** One book on the shelf: cover, name, chapter and when it was last read. Hold for options. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun BookRow(book: Book, position: ReadingPosition?, onContinue: () -> Unit, onRemove: () -> Unit) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(18.dp),
-        onClick = onContinue,
-    ) {
-        Row(Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            BookCover(book.name, book.coverUrl, 44.dp, 60.dp)
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(book.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(book.lastChapterTitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                ProgressLine(position)
+private fun ShelfBook(book: Book, position: ReadingPosition?, width: Dp, onContinue: () -> Unit, onRemove: () -> Unit) {
+    var menu by remember { mutableStateOf(false) }
+    val chapter = Regex("\\d+").find(book.lastChapterTitle)?.value
+    val readAgo = DateUtils.getRelativeTimeSpanString(book.updatedAt, System.currentTimeMillis(), DateUtils.DAY_IN_MILLIS).toString()
+    Box {
+        Column(
+            Modifier
+                .width(width)
+                .clip(RoundedCornerShape(12.dp))
+                .combinedClickable(onClick = onContinue, onLongClick = { menu = true }),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            BookCover(book.name, book.coverUrl, width, width * 1.4f)
+            if (position != null && position.total > 0) {
+                LinearProgressIndicator(
+                    progress = { (position.index + 1) / position.total.toFloat() },
+                    modifier = Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)),
+                    drawStopIndicator = {},
+                    gapSize = 0.dp,
+                )
             }
-            BookMenu(onRemove)
+            Text(book.name, style = MaterialTheme.typography.labelLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(
+                listOfNotNull(chapter?.let { stringResource(R.string.chapter_short, it) }, readAgo).joinToString(" · "),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(text = { Text(stringResource(R.string.continue_listening)) }, onClick = { menu = false; onContinue() })
+            DropdownMenuItem(text = { Text(stringResource(R.string.library_remove)) }, onClick = { menu = false; onRemove() })
         }
     }
 }

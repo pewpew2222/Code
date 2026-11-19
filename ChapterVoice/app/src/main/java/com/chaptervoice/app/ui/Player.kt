@@ -227,9 +227,18 @@ internal fun NowPlayingScreen(
             }
 
             // ---------------------------------------------------------------- book
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            // Tapping the book and chapter opens the chapter's web page.
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .then(if (state.chapterUrl != null) Modifier.pressable(onClick = onGoToPage) else Modifier)
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 BookCover(state.bookName ?: state.chapterTitle.orEmpty(), state.coverUrl, 52.dp, 72.dp)
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         state.chapterTitle ?: stringResource(R.string.status_loading),
                         style = MaterialTheme.typography.titleMedium,
@@ -244,6 +253,14 @@ internal fun NowPlayingScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (state.chapterUrl != null) {
+                    Icon(
+                        painterResource(R.drawable.ic_open_page),
+                        contentDescription = stringResource(R.string.go_to_reading_page),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }

@@ -127,6 +127,6 @@ class ScreenshotTest {
     }
 
     @Test fun settingsDark() = shoot("settings_dark", dark = true, accent = "amber") {
-        SettingsScreen(settings) {}
+        SettingsScreen(settings, onChanged = {})
     }
 }

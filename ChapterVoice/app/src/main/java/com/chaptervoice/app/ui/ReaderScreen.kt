@@ -142,6 +142,11 @@ fun ReaderScreen(
     BackHandler(enabled = overlay == Overlay.NONE && tabs.pickTabId == active.id) { tabs.cancelPick() }
     BackHandler(enabled = overlay == Overlay.NONE && active.canGoBack) { active.goBack() }
 
+    // Tapping "Web" again shows a fresh start page: close any overlay.
+    LaunchedEffect(nav.reselects[Section.WEB]) {
+        if ((nav.reselects[Section.WEB] ?: 0) > 0) overlay = Overlay.NONE
+    }
+
     LaunchedEffect(incomingUrl) {
         if (incomingUrl != null) {
             open(incomingUrl, inNewTab = active.url.isNotEmpty())
