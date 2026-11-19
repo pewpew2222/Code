@@ -2,6 +2,11 @@ package com.chaptervoice.app
 
 import android.content.Context
 import com.chaptervoice.app.core.NextMode
+import com.chaptervoice.app.core.TextCleaner
+import org.json.JSONArray
+import org.json.JSONObject
+
+private val DEFAULT_RULES = listOf(TextCleaner.Replacement("exp", "experience"))
 
 class AppSettings(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -55,6 +60,28 @@ class AppSettings(context: Context) {
     var deleteAfterRead: Boolean
         get() = prefs.getBoolean("delete_after_read", true)
         set(value) = prefs.edit().putBoolean("delete_after_read", value).apply()
+
+    /** "Say X as Y" rules for the reader. Starts with "exp" -> "experience". */
+    var pronunciationRules: List<TextCleaner.Replacement>
+        get() = runCatching {
+            val json = JSONArray(prefs.getString("pronunciation_rules", null) ?: return DEFAULT_RULES)
+            (0 until json.length()).map { i ->
+                val o = json.getJSONObject(i)
+                TextCleaner.Replacement(o.getString("from"), o.optString("to"))
+            }
+        }.getOrDefault(DEFAULT_RULES)
+        set(value) {
+            val json = JSONArray()
+            value.forEach { json.put(JSONObject().put("from", it.from).put("to", it.to)) }
+            prefs.edit().putString("pronunciation_rules", json.toString()).apply()
+        }
+
+    /** Read "No. 1" as "number 1". */
+    var numberRule: Boolean
+        get() = prefs.getBoolean("number_rule", true)
+        set(value) = prefs.edit().putBoolean("number_rule", value).apply()
+
+    fun pronunciation() = TextCleaner.Pronunciation(pronunciationRules, numberRule)
 
     /** TTS engine package, e.g. SherpaTTS ("" = the phone's default engine). */
     var ttsEngine: String

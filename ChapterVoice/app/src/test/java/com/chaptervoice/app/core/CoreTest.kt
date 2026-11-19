@@ -397,6 +397,21 @@ class TextCleanerTest {
     }
 
     @Test
+    fun appliesPronunciationRules() {
+        val rules = TextCleaner.Pronunciation(listOf(TextCleaner.Replacement("exp", "experience")), numberRule = true)
+        assertEquals(
+            "He gained 1000 experience. experience bar full. experience!",
+            TextCleaner.clean("He gained 1000 EXP. Exp bar full. exp!", pronunciation = rules),
+        )
+        // Other words containing the letters are left alone.
+        assertEquals("I expect an express train.", TextCleaner.clean("I expect an express train.", pronunciation = rules))
+        assertEquals("He was the number 1 student, number 3 too.", TextCleaner.clean("He was the No. 1 student, No.3 too.", pronunciation = rules))
+        assertEquals("No. I refuse.", TextCleaner.clean("No. I refuse.", pronunciation = rules))
+        val noNumberRule = TextCleaner.Pronunciation(emptyList(), numberRule = false)
+        assertEquals("No. 1", TextCleaner.clean("No. 1", pronunciation = noNumberRule))
+    }
+
+    @Test
     fun removesKaomojiAndEmoticons() {
         assertEquals("", TextCleaner.clean("(〒 ﹏〒)"))
         assertEquals("", TextCleaner.clean("(╯°□°）╯︵ ┻━┻"))

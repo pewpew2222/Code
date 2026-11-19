@@ -89,6 +89,8 @@ internal fun SettingsDialog(settings: AppSettings, onChanged: () -> Unit, onDism
                     onDone = { settings.sentencePauseMs = it; onChanged() },
                 )
                 VoiceSettings(settings, onChanged)
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                PronunciationSettings(settings, onChanged)
 
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
                 SwitchRow(stringResource(R.string.setting_auto_continue), autoContinue) {

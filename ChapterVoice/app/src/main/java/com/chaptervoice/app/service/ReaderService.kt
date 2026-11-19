@@ -324,11 +324,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
             // A bookmark on the previous chapter moves along to this one.
             BookmarkStore.get(this).advance(previous.url, loaded.url, loaded.pageTitle.ifBlank { loaded.title })
         }
-        val text = buildList {
-            if (settings.readTitle && loaded.heading.isNotBlank()) add(loaded.heading)
-            addAll(loaded.paragraphs)
-        }.map { TextCleaner.clean(it, loaded.language) }.filter { it.isNotBlank() }
-        pieces = TextChunker.chunk(text, maxPieceLength())
+        pieces = buildPieces(loaded)
         // Continue where reading stopped last time in this chapter, if it was started before.
         val saved = ReadingPositions.get(this).get(requestedUrl ?: loaded.url)
         index = saved?.index?.takeIf { it in 1..pieces.lastIndex } ?: 0
@@ -492,7 +488,25 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         if (!ttsReady) return
         applyVoiceSettings()
         applyLanguage(chapter)
+        // Pronunciation rules or "read the heading" may have changed: rebuild the text.
+        chapter?.let { current ->
+            val rebuilt = buildPieces(current)
+            if (rebuilt != pieces && rebuilt.isNotEmpty()) {
+                pieces = rebuilt
+                index = index.coerceIn(0, pieces.lastIndex)
+            }
+        }
         if (playing) speakFrom(index)
+    }
+
+    /** The chapter as cleaned pieces of text, ready for the TTS engine. */
+    private fun buildPieces(loaded: Chapter): List<String> {
+        val pronunciation = settings.pronunciation()
+        val text = buildList {
+            if (settings.readTitle && loaded.heading.isNotBlank()) add(loaded.heading)
+            addAll(loaded.paragraphs)
+        }.map { TextCleaner.clean(it, loaded.language, pronunciation) }.filter { it.isNotBlank() }
+        return TextChunker.chunk(text, maxPieceLength())
     }
 
     private fun applyVoiceSettings() {

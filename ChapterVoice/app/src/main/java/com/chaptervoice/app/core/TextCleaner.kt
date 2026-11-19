@@ -58,13 +58,44 @@ object TextCleaner {
      * Cleans one paragraph. [language] is the chapter's language ("en", ...); accents are
      * only removed from English text.
      */
-    fun clean(text: String, language: String? = null): String {
+    fun clean(
+        text: String,
+        language: String? = null,
+        pronunciation: Pronunciation = Pronunciation.NONE,
+    ): String {
         var result = removeEmoticons(text)
         result = fixSymbols(result)
         result = fixLookAlikeLetters(result)
         if (language == "en") result = toPlainLatin(result)
         result = removeCensorDots(result)
-        return removeWatermarks(result)
+        result = removeWatermarks(result)
+        return pronunciation.apply(result)
+    }
+
+    // ---------------------------------------------------------------- pronunciation
+
+    /** A word to say differently: "exp" -> "experience". Matches whole words, any case. */
+    data class Replacement(val from: String, val to: String)
+
+    /**
+     * The user's pronunciation rules, plus "No. 1" -> "number 1" (a number after
+     * "No." means "number"; without one, "No." is left to the voice, as it usually means "no").
+     */
+    class Pronunciation(replacements: List<Replacement>, private val numberRule: Boolean) {
+        private val rules = replacements
+            .filter { it.from.isNotBlank() }
+            .map { Regex("(?<![\\p{L}\\p{N}])" + Regex.escape(it.from.trim()) + "(?![\\p{L}\\p{N}])", RegexOption.IGNORE_CASE) to it.to }
+
+        fun apply(text: String): String {
+            var result = if (numberRule) NUMBER_AFTER_NO.replace(text, "number ") else text
+            for ((regex, to) in rules) result = regex.replace(result, Regex.escapeReplacement(to))
+            return result
+        }
+
+        companion object {
+            val NONE = Pronunciation(emptyList(), numberRule = false)
+            private val NUMBER_AFTER_NO = Regex("(?<![\\p{L}])[Nn][Oo]\\.\\s*(?=\\d)")
+        }
     }
 
     // ---------------------------------------------------------------- emoticons

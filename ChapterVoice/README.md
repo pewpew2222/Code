@@ -17,6 +17,7 @@ vidare till nästa kapitel. Gjord för webbnoveller.
   på låsskärmen och via hörlurarnas knappar. Pausar när hörlurarna kopplas ur eller när ett samtal kommer.
 - Tar bort "censurpunkter" i ord före uppläsning ("sh.i.p.s" → "ships"). Ord censurerade med
   versaler ("S.H.I.T") slås upp i en ordlista så att akronymer som "F.B.I" lämnas orörda.
+- **Uttalsregler:** egna regler för ord som läses fel (förvalt "exp" → "experience"), och "No. 1" läses som "number 1".
 - Inställningar: hastighet, tonhöjd, läsa upp rubriken, insomningsstopp efter N kapitel,
   genväg till systemets röst- och språkval.
 - **Reklamblockering** i webbläsaren: anrop till cirka 76 000 kända reklam- och spårningsdomäner

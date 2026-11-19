@@ -122,6 +122,12 @@
     <string name="setting_paragraph_pause">Paus mellan stycken: %1$d ms</string>
     <string name="setting_sentence_pause">Extra paus mellan meningar: %1$d ms</string>
     <string name="setting_sentence_pause_off">Extra paus mellan meningar: av (rösten bestämmer)</string>
+    <string name="setting_pronunciation">Uttal</string>
+    <string name="setting_pronunciation_hint">Ord som läses som något annat. Gäller hela ord, oavsett versaler (exp, Exp och EXP).</string>
+    <string name="pronunciation_from">Ord i texten</string>
+    <string name="pronunciation_to">Läs som</string>
+    <string name="pronunciation_add">Lägg till regel</string>
+    <string name="setting_number_rule">Läs "No." följt av en siffra som "number" (No. 1 → number 1)</string>
     <string name="setting_engine">Motor för talsyntes</string>
     <string name="engine_default">Telefonens standard (%1$s)</string>
     <string name="setting_language">Språk för uppläsning</string>
