@@ -91,6 +91,11 @@ class AppSettings(context: Context) {
         get() = prefs.getBoolean("number_rule", true)
         set(value) = prefs.edit().putBoolean("number_rule", value).apply()
 
+    /** Read "LV.5" as "level 5". */
+    var levelRule: Boolean
+        get() = prefs.getBoolean("level_rule", true)
+        set(value) = prefs.edit().putBoolean("level_rule", value).apply()
+
     /**
      * Master switch for all text rules (censor fixes, symbol and emoticon filters,
      * watermark removal, pronunciation rules). Off = read the text exactly as written.
@@ -151,6 +156,7 @@ class AppSettings(context: Context) {
     fun pronunciation(bookKey: String? = null) = TextCleaner.Pronunciation(
         bookKey?.let { bookRules(it) }.orEmpty() + pronunciationRules,
         numberRule,
+        levelRule,
     )
 
     /** "system", "light" or "dark". */

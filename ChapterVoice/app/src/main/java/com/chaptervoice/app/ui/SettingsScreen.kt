@@ -355,6 +355,7 @@ private fun TextRulesGroup(settings: AppSettings, onChanged: () -> Unit) {
     val globalOn = remember(switches) { settings.textRulesEnabled }
     var rules by remember { mutableStateOf(settings.pronunciationRules) }
     var numberRule by remember { mutableStateOf(settings.numberRule) }
+    var levelRule by remember { mutableStateOf(settings.levelRule) }
     var books by remember { mutableStateOf(settings.booksWithRules()) }
     var editingBook by remember { mutableStateOf<String?>(null) }
     var editingRules by remember { mutableStateOf(false) }
@@ -374,6 +375,12 @@ private fun TextRulesGroup(settings: AppSettings, onChanged: () -> Unit) {
         SwitchRow(stringResource(R.string.setting_number_rule), checked = numberRule) {
             numberRule = it
             settings.numberRule = it
+            onChanged()
+        }
+        RowDivider()
+        SwitchRow(stringResource(R.string.setting_level_rule), checked = levelRule) {
+            levelRule = it
+            settings.levelRule = it
             onChanged()
         }
         books.forEach { (key, count) ->

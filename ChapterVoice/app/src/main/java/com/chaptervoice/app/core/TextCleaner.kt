@@ -81,13 +81,18 @@ object TextCleaner {
      * The user's pronunciation rules, plus "No. 1" -> "number 1" (a number after
      * "No." means "number"; without one, "No." is left to the voice, as it usually means "no").
      */
-    class Pronunciation(replacements: List<Replacement>, private val numberRule: Boolean) {
+    class Pronunciation(
+        replacements: List<Replacement>,
+        private val numberRule: Boolean,
+        private val levelRule: Boolean = false,
+    ) {
         private val rules = replacements
             .filter { it.from.isNotBlank() }
             .map { Regex("(?<![\\p{L}\\p{N}])" + Regex.escape(it.from.trim()) + "(?![\\p{L}\\p{N}])", RegexOption.IGNORE_CASE) to it.to }
 
         fun apply(text: String): String {
             var result = if (numberRule) NUMBER_AFTER_NO.replace(text, "number ") else text
+            if (levelRule) result = LEVEL.replace(result, "level ")
             for ((regex, to) in rules) result = regex.replace(result, Regex.escapeReplacement(to))
             return result
         }
@@ -95,6 +100,9 @@ object TextCleaner {
         companion object {
             val NONE = Pronunciation(emptyList(), numberRule = false)
             private val NUMBER_AFTER_NO = Regex("(?<![\\p{L}])[Nn][Oo]\\.\\s*(?=\\d)")
+
+            /** "LV.5", "Lv. 5", "Lvl.5" before a number. */
+            private val LEVEL = Regex("(?<![\\p{L}])[Ll][Vv][Ll]?\\.\\s*(?=\\d)")
         }
     }
 

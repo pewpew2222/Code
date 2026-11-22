@@ -451,6 +451,19 @@ class TextCleanerTest {
     }
 
     @Test
+    fun readsLevelBeforeNumber() {
+        val rules = TextCleaner.Pronunciation(emptyList(), numberRule = false, levelRule = true)
+        assertEquals(
+            "He reached level 5, then level 12 and level 3.",
+            TextCleaner.clean("He reached LV.5, then Lv. 12 and Lvl.3.", pronunciation = rules),
+        )
+        assertEquals("The LV logo. Lv. is short.", TextCleaner.clean("The LV logo. Lv. is short.", pronunciation = rules))
+        assertEquals("[Level: level 7]", TextCleaner.clean("[Level: LV.7]", pronunciation = rules))
+        val off = TextCleaner.Pronunciation(emptyList(), numberRule = false)
+        assertEquals("LV.5", TextCleaner.clean("LV.5", pronunciation = off))
+    }
+
+    @Test
     fun removesKaomojiAndEmoticons() {
         assertEquals("", TextCleaner.clean("(〒 ﹏〒)"))
         assertEquals("", TextCleaner.clean("(╯°□°）╯︵ ┻━┻"))

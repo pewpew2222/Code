@@ -212,6 +212,7 @@
     <string name="rules_book">Textregler för den här boken</string>
     <string name="book_rules_title">Uttalsregler för boken</string>
     <string name="book_rules_hint">Gäller bara den här boken (alla dess kapitel) och används före de allmänna reglerna.</string>
+    <string name="setting_level_rule">Läs "LV." följt av en siffra som "level" (LV. 5 → level 5)</string>
     <string name="setting_number_rule">Läs "No." följt av en siffra som "number" (No. 1 → number 1)</string>
     <string name="engine_default_plain">Telefonens standard</string>
     <string name="engine_default">Telefonens standard (%1$s)</string>
