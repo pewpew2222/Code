@@ -24,7 +24,7 @@ object CoverFinder {
     fun find(doc: Document): String? {
         for (selector in COVER_IMAGES) {
             for (img in doc.select(selector)) {
-                val src = img.absUrl("data-src").ifEmpty { img.absUrl("data-original") }.ifEmpty { img.absUrl("src") }
+                val src = listOf("data-src", "data-original", "data-lazy-src", "src").map { img.absUrl(it) }.firstOrNull { it.startsWith("http") }.orEmpty()
                 usable(src)?.let { return it }
             }
         }

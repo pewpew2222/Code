@@ -93,7 +93,7 @@ internal fun MiniPlayer(state: ReaderUiState, onOpen: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                BookCover(state.bookName ?: state.chapterTitle.orEmpty(), state.coverUrl, 34.dp, 46.dp)
+                BookCover(state.bookName ?: state.chapterTitle.orEmpty(), state.coverUrl, 34.dp, 46.dp, pageUrl = state.chapterUrl)
                 Column(Modifier.weight(1f)) {
                     Text(
                         state.chapterTitle ?: stringResource(R.string.status_loading),
@@ -237,7 +237,7 @@ internal fun NowPlayingScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                BookCover(state.bookName ?: state.chapterTitle.orEmpty(), state.coverUrl, 52.dp, 72.dp)
+                BookCover(state.bookName ?: state.chapterTitle.orEmpty(), state.coverUrl, 52.dp, 72.dp, pageUrl = state.chapterUrl)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         state.chapterTitle ?: stringResource(R.string.status_loading),

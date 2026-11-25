@@ -149,7 +149,7 @@ private fun DiscoverCard(item: DiscoverItem, onClick: () -> Unit, modifier: Modi
             .clip(RoundedCornerShape(12.dp))
             .pressable(onClick = onClick),
     ) {
-        BookCover(item.title, item.coverUrl, 104.dp, 148.dp)
+        BookCover(item.title, item.coverUrl, 104.dp, 148.dp, pageUrl = item.url)
         Text(
             item.title,
             style = MaterialTheme.typography.bodySmall,
@@ -212,7 +212,7 @@ internal fun DiscoverPreview(
 
     Sheet(item.title, onDismiss) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            BookCover(item.title, item.coverUrl, 96.dp, 136.dp)
+            BookCover(item.title, item.coverUrl, 96.dp, 136.dp, pageUrl = item.url)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     SiteIcon(item.site, size = 16.dp)

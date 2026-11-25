@@ -226,7 +226,7 @@ internal fun NewTabPage(
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
                                 Box {
-                                    BookCover(book.name, book.coverUrl, 108.dp, 150.dp)
+                                    BookCover(book.name, book.coverUrl, 108.dp, 150.dp, pageUrl = book.lastChapterUrl)
                                     Surface(
                                         color = MaterialTheme.colorScheme.primary,
                                         shape = RoundedCornerShape(10.dp),

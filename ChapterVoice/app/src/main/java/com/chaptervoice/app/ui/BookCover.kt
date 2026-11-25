@@ -32,11 +32,19 @@ import com.chaptervoice.app.data.ImageCache
  * while it loads or when the site has none.
  */
 @Composable
-internal fun BookCover(name: String, coverUrl: String?, width: Dp, height: Dp, modifier: Modifier = Modifier) {
+internal fun BookCover(
+    name: String,
+    coverUrl: String?,
+    width: Dp,
+    height: Dp,
+    modifier: Modifier = Modifier,
+    /** A page of the book's site; some image servers only answer requests from it. */
+    pageUrl: String? = null,
+) {
     val context = LocalContext.current
     var bitmap by remember(coverUrl) { mutableStateOf(coverUrl?.let { ImageCache.cached(it) }) }
     LaunchedEffect(coverUrl) {
-        if (coverUrl != null && bitmap == null) bitmap = ImageCache.load(context, coverUrl)
+        if (coverUrl != null && bitmap == null) bitmap = ImageCache.load(context, coverUrl, referer = pageUrl)
     }
     val shape = RoundedCornerShape(width / 7)
     val image = bitmap

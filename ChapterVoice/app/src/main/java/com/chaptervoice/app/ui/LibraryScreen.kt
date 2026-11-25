@@ -231,7 +231,7 @@ private fun ContinueCard(book: Book, position: ReadingPosition?, onContinue: () 
         onClick = onContinue,
     ) {
         Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            BookCover(book.name, book.coverUrl, 76.dp, 104.dp)
+            BookCover(book.name, book.coverUrl, 76.dp, 104.dp, pageUrl = book.lastChapterUrl)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(book.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(book.lastChapterTitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -262,7 +262,7 @@ private fun ShelfBook(book: Book, position: ReadingPosition?, width: Dp, onConti
                 .combinedClickable(onClick = onContinue, onLongClick = { menu = true }),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            BookCover(book.name, book.coverUrl, width, width * 1.4f)
+            BookCover(book.name, book.coverUrl, width, width * 1.4f, pageUrl = book.lastChapterUrl)
             if (position != null && position.total > 0) {
                 LinearProgressIndicator(
                     progress = { (position.index + 1) / position.total.toFloat() },
