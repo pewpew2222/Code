@@ -67,28 +67,13 @@ import androidx.compose.ui.unit.dp
 import com.chaptervoice.app.AppSettings
 import com.chaptervoice.app.R
 import com.chaptervoice.app.core.DiscoverItem
+import com.chaptervoice.app.core.SiteSearch
 import com.chaptervoice.app.data.Book
 import com.chaptervoice.app.data.DiscoverFeed
 import com.chaptervoice.app.data.BookUpdate
 import com.chaptervoice.app.data.HistoryEntry
 import com.chaptervoice.app.data.QuickSites
 import com.chaptervoice.app.data.UpdateChecker
-import java.net.URLEncoder
-
-/** Search pages of sites where the format is known; others are searched through Google. */
-private val SITE_SEARCH = mapOf(
-    "royalroad.com" to "https://www.royalroad.com/fictions/search?title={q}",
-    "scribblehub.com" to "https://www.scribblehub.com/?s={q}&post_type=fictionposts",
-    "webnovel.com" to "https://www.webnovel.com/search?keywords={q}",
-    "archiveofourown.org" to "https://archiveofourown.org/works/search?work_search%5Bquery%5D={q}",
-    "fanfiction.net" to "https://www.fanfiction.net/search/?keywords={q}&type=story",
-)
-
-private fun siteSearchUrl(host: String, query: String): String {
-    val q = URLEncoder.encode(query, "UTF-8")
-    return SITE_SEARCH[host]?.replace("{q}", q)
-        ?: "https://www.google.com/search?q=" + URLEncoder.encode("site:$host $query", "UTF-8")
-}
 
 /**
  * The page of a new tab, for finding something new or getting somewhere fast:
@@ -128,7 +113,10 @@ internal fun NewTabPage(
         (pinned.filter { it !in hidden } + ranked).distinct().take(8)
             .ifEmpty { QuickSites.groups.first().sites.take(8) }
     }
-    val searchSites = remember(visited) { (visited + SITE_SEARCH.keys).distinct().take(8) }
+    val searchSites = remember(visited) { (visited + SiteSearch.KNOWN.keys).distinct().take(8) }
+    // "Search all sites": your pinned and visited sites, the sites of your books, and known ones.
+    val allSites = remember(visited, books) { searchableSites(visited, DiscoverFeed.sitesFor(books), SiteSearch.KNOWN.keys.toList()) }
+    var searchAll by rememberSaveable { mutableStateOf<String?>(null) }
 
     Surface(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -166,7 +154,15 @@ internal fun NewTabPage(
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-                    keyboardActions = KeyboardActions(onGo = { if (query.isNotBlank()) onOpen(normalizeAddress(query)) }),
+                    keyboardActions = KeyboardActions(onGo = {
+                        val text = query.trim()
+                        // An address opens; words search all your sites.
+                        when {
+                            text.isEmpty() -> Unit
+                            !text.contains(' ') && (text.contains('.') || text.contains("://")) -> onOpen(normalizeAddress(text))
+                            else -> searchAll = text
+                        }
+                    }),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -176,6 +172,14 @@ internal fun NewTabPage(
                         item {
                             FilterChip(
                                 selected = true,
+                                onClick = { searchAll = query.trim() },
+                                label = { Text(stringResource(R.string.search_all_chip, allSites.size)) },
+                                leadingIcon = { Icon(painterResource(R.drawable.ic_library), contentDescription = null, modifier = Modifier.size(18.dp)) },
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = false,
                                 onClick = { onOpen(normalizeAddress(query)) },
                                 label = { Text(stringResource(R.string.newtab_search_web)) },
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
@@ -184,7 +188,7 @@ internal fun NewTabPage(
                         items(searchSites) { host ->
                             FilterChip(
                                 selected = false,
-                                onClick = { onOpen(siteSearchUrl(host, query.trim())) },
+                                onClick = { onOpen(SiteSearch.browserUrl(host, query.trim())) },
                                 label = { Text(host.substringBeforeLast('.')) },
                                 leadingIcon = { SiteIcon(host, size = 18.dp) },
                             )
@@ -331,6 +335,15 @@ internal fun NewTabPage(
         }
     }
 
+    searchAll?.let { q ->
+        SearchAllScreen(
+            query = q,
+            sites = allSites,
+            onDismiss = { searchAll = null },
+            onPick = { preview = it },
+            onOpen = { searchAll = null; onOpen(it) },
+        )
+    }
     if (showAll) {
         DiscoverAll(
             state = discover,
@@ -343,8 +356,8 @@ internal fun NewTabPage(
         DiscoverPreview(
             item = item,
             onDismiss = { preview = null },
-            onOpen = { showAll = false; onOpen(it) },
-            onReadFirst = { showAll = false; onReadNewChapter(it) },
+            onOpen = { showAll = false; searchAll = null; onOpen(it) },
+            onReadFirst = { showAll = false; searchAll = null; onReadNewChapter(it) },
         )
     }
 }

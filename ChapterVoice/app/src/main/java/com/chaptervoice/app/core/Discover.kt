@@ -31,13 +31,13 @@ object DiscoverParser {
     fun sourceFor(site: String): DiscoverSource =
         KNOWN.firstOrNull { it.site == site } ?: DiscoverSource(site, "https://$site/", "")
 
-    fun parse(doc: Document, site: String, limit: Int = 24): List<DiscoverItem> {
+    fun parse(doc: Document, site: String, limit: Int = 24, minGroup: Int = 3): List<DiscoverItem> {
         val exact = when (site) {
             "royalroad.com" -> royalRoad(doc, site)
             "scribblehub.com" -> scribbleHub(doc, site)
             else -> emptyList()
         }
-        val items = exact.ifEmpty { generic(doc, site) }
+        val items = exact.ifEmpty { generic(doc, site, minGroup) }
         return items.distinctBy { it.url.trimEnd('/') }.take(limit)
     }
 
@@ -79,7 +79,7 @@ object DiscoverParser {
      * image. The largest group of links sharing their first path segment ("/novel/…")
      * is taken as the site's book pages.
      */
-    internal fun generic(doc: Document, site: String): List<DiscoverItem> {
+    internal fun generic(doc: Document, site: String, minGroup: Int = 3): List<DiscoverItem> {
         val found = LinkedHashMap<String, DiscoverItem>()
         doc.select("img").forEach { img ->
             val cover = imageUrl(img) ?: return@forEach
@@ -94,7 +94,7 @@ object DiscoverParser {
         // Keep the biggest group: book pages share a path ("/novel/…", "/book/…").
         val groups = found.values.groupBy { firstSegment(it.url) }
         val best = groups.maxByOrNull { it.value.size }?.value.orEmpty()
-        return if (best.size >= 3) best else emptyList()
+        return if (best.size >= minGroup) best else emptyList()
     }
 
     private fun nearbyLink(img: Element): Element? {
@@ -108,7 +108,7 @@ object DiscoverParser {
         return null
     }
 
-    private fun isBookUrl(url: String, site: String): Boolean {
+    internal fun isBookUrl(url: String, site: String): Boolean {
         if (!url.startsWith("http")) return false
         val host = runCatching { java.net.URI(url).host.orEmpty().removePrefix("www.") }.getOrDefault("")
         if (host != site && !host.endsWith(".$site")) return false
@@ -134,7 +134,7 @@ object DiscoverParser {
             .firstOrNull { it.length in 2..120 && !it.equals("cover", true) && !it.startsWith("http") }
     }
 
-    private fun imageUrl(img: Element): String? {
+    internal fun imageUrl(img: Element): String? {
         for (attr in listOf("data-src", "data-original", "data-lazy-src", "data-cfsrc", "src")) {
             val value = img.absUrl(attr)
             if (value.startsWith("http") && !value.startsWith("data:")) return value

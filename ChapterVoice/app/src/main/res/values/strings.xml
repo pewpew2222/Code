@@ -259,4 +259,12 @@
     <string name="media_hls">Ström (HLS)</string>
     <string name="media_dash">Ström (DASH)</string>
     <string name="stream_encrypted">krypterad</string>
+    <string name="search_all_chip">Alla sajter (%1$d)</string>
+    <string name="search_all_progress">Söker… %1$d av %2$d sajter klara</string>
+    <string name="search_all_done">%1$d träffar på %2$d sajter</string>
+    <string name="search_all_open_site">Visa på sajten</string>
+    <string name="search_all_nothing">Hittade inga böcker.</string>
+    <string name="search_all_no_matches">Inga träffar</string>
+    <string name="search_all_failed">Gick inte att söka på</string>
+    <string name="search_all_hint">Tryck på en sajt för att söka direkt på den.</string>
 </resources>

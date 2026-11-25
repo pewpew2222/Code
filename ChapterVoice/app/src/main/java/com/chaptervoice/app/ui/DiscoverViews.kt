@@ -143,7 +143,7 @@ internal fun DiscoverRow(
 }
 
 @Composable
-private fun DiscoverCard(item: DiscoverItem, onClick: () -> Unit, modifier: Modifier = Modifier.width(104.dp)) {
+internal fun DiscoverCard(item: DiscoverItem, onClick: () -> Unit, modifier: Modifier = Modifier.width(104.dp)) {
     Column(
         modifier
             .clip(RoundedCornerShape(12.dp))
