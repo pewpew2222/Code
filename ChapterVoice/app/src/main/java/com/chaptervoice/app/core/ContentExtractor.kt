@@ -99,7 +99,7 @@ object ContentExtractor {
         val title = headingOnPage
             ?: lines.take(HEADING_SCAN_LINES).firstOrNull { looksLikeChapterHeading(it) }
             ?: ""
-        val paragraphs = dropLeadingTitle(lines, title).let { dropCredits(it) }
+        val paragraphs = dropLeadingTitle(lines, title).let { dropCredits(it) }.let { stripGluedHead(it, title) }
 
         return Extracted(title, paragraphs)
     }
@@ -293,5 +293,87 @@ object ContentExtractor {
         if (title.isBlank()) return paragraphs
         val index = paragraphs.take(HEADING_SCAN_LINES).indexOfFirst { it.equals(title, ignoreCase = true) }
         return if (index < 0) paragraphs else paragraphs.filterIndexed { i, _ -> i != index }
+    }
+
+    // ------------------------------------------------------------ glued head
+
+    private const val GLUED_SCAN = 3
+    private const val SEP = "\\s*[:：.\\-–—|]?\\s*"
+
+    /** "Chapter 12 - 3 " or "12: " in front of a chapter's name. */
+    private val NUMBER_PREFIX = Regex("^(?:(?:chapter|chap|ch|episode|ep)\\.?\\s*\\d+$SEP)?(?:\\d+$SEP)?", RegexOption.IGNORE_CASE)
+
+    /** A credit at the start of a line, before the story goes on in the same line. */
+    private val CREDIT_LABEL = Regex(
+        "^(?:(?:translators?|editors?|proofreaders?|tl|ed|pr|tlc)\\s*[:：\\-–—]|(?:edited|translated) by\\s)\\s*",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /** Capitalised words that start a sentence rather than continue a name. */
+    private val SENTENCE_STARTERS = setOf(
+        "a", "an", "the", "at", "in", "on", "as", "after", "before", "when", "while", "suddenly", "meanwhile",
+        "he", "she", "it", "they", "we", "i", "you", "his", "her", "their", "this", "that", "these", "those",
+        "there", "here", "but", "and", "so", "then", "now", "what", "why", "how", "who", "where", "chapter",
+        "translator", "translators", "editor", "editors", "proofreader", "tl", "ed", "pr",
+    )
+
+    /**
+     * The first lines of some sites hold the chapter's name (sometimes twice) and the
+     * credits glued to the first sentence: "1: Reincarnated as a Dragon 1: Reincarnated as
+     * a Dragon Editor: Atlas Studios At night, Yang Jian was reading a novel."
+     * Strips those from the start of the first lines and keeps the story.
+     */
+    internal fun stripGluedHead(paragraphs: List<String>, title: String): List<String> {
+        val name = NUMBER_PREFIX.replace(title.trim(), "").trim().trimEnd(':', '.', '-', '–', '—').trim()
+        val result = paragraphs.toMutableList()
+        for (i in 0 until minOf(GLUED_SCAN, result.size)) {
+            var line = result[i]
+            var changed = true
+            while (changed) {
+                val before = line
+                if (name.length >= 3) line = stripName(line, name)
+                line = stripRepeatedHeading(line)
+                line = stripCredit(line)
+                changed = line != before && line.isNotEmpty()
+            }
+            result[i] = line
+        }
+        return result.filter { it.isNotBlank() }
+    }
+
+    private fun stripName(line: String, name: String): String {
+        val pattern = Regex("^(?:(?:chapter|chap|ch|episode|ep)\\.?\\s*\\d+$SEP)?(?:\\d+$SEP)?" + Regex.escape(name) + "(?![\\p{L}\\p{N}])$SEP", RegexOption.IGNORE_CASE)
+        val match = pattern.find(line) ?: return line
+        // A short name ("The Dragon") may also be how the story starts: only with its number.
+        if (name.length < 15 && match.value.none(Char::isDigit)) return line
+        return line.substring(match.range.last + 1).trimStart()
+    }
+
+    /** The same heading written twice at the start: "Chapter 5: X Chapter 5: X ...". */
+    private val REPEATED_HEAD = Regex("^(.{4,90}?)\\s+\\1(?![\\p{L}\\p{N}])\\s*")
+
+    private fun stripRepeatedHeading(line: String): String {
+        val match = REPEATED_HEAD.find(line) ?: return line
+        val head = match.groupValues[1]
+        return if (looksLikeChapterHeading(head) || head.first().isDigit()) line.substring(match.range.last + 1).trimStart() else line
+    }
+
+    private fun stripCredit(line: String): String {
+        val label = CREDIT_LABEL.find(line) ?: return line
+        val words = line.substring(label.range.last + 1).split(' ').filter { it.isNotEmpty() }
+        var taken = 0
+        for (word in words) {
+            if (taken >= 4) break
+            val bare = word.trim(',', '.', ':', ';', '!', '?', '"', '“', '”')
+            val nameLike = bare.isNotEmpty() && (bare.first().isUpperCase() || bare.first().isDigit() || bare.contains('_'))
+            if (!nameLike || (taken > 0 && bare.lowercase() in SENTENCE_STARTERS)) break
+            taken++
+            // A name ends where its word ends a sentence or a clause.
+            if (word.endsWith('.') || word.endsWith(',')) break
+        }
+        if (taken == 0) return line
+        val rest = words.drop(taken).joinToString(" ")
+        // A line that was only the credit is left empty and dropped.
+        return rest
     }
 }
