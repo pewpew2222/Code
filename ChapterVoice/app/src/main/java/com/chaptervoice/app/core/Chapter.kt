@@ -16,6 +16,8 @@ data class Chapter(
     val language: String? = null,
     /** The book's cover image, when the chapter page shows it. */
     val coverUrl: String? = null,
+    /** The page's "previous chapter" link, if it has one. */
+    val previousUrl: String? = null,
 ) {
     val textFingerprint: Int get() = paragraphs.joinToString("\n").hashCode()
 }
@@ -34,6 +36,7 @@ object ChapterParser {
             heading = extracted.title,
             language = LanguageDetector.detect(doc.selectFirst("html")?.attr("lang"), extracted.paragraphs),
             coverUrl = CoverFinder.find(doc),
+            previousUrl = runCatching { NextChapterResolver.findChapterLinks(doc, url).previous }.getOrNull(),
         )
     }
 

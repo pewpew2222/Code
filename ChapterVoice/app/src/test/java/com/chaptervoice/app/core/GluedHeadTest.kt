@@ -51,4 +51,21 @@ class GluedHeadTest {
         assertEquals("At night, Yang Jian was reading a novel.", result.paragraphs.first())
         assertEquals(3, result.paragraphs.size)
     }
+
+    @Test fun nameFollowedByTheStory() {
+        assertEquals(
+            listOf("Hill was only half the size of Garen."),
+            strip(
+                "Chapter 2 - 2 Discovered Beautiful Eyes",
+                "2: Discovered Beautiful Eyes 2: Discovered Beautiful Eyes Editor: Atlas Studios Hill was only half the size of Garen.",
+            ),
+        )
+    }
+
+    @Test fun noBreakSpaces() {
+        assertEquals(
+            listOf("Hill was only half the size of Garen."),
+            strip("", "2:\u00A0Discovered Beautiful Eyes\u00A02: Discovered\u00A0Beautiful Eyes Editor:\u00A0Atlas Studios Hill was only half the size of Garen."),
+        )
+    }
 }

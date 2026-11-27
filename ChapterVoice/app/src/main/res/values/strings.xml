@@ -267,4 +267,5 @@
     <string name="search_all_no_matches">Inga träffar</string>
     <string name="search_all_failed">Gick inte att söka på</string>
     <string name="search_all_hint">Tryck på en sajt för att söka direkt på den.</string>
+    <string name="message_no_previous">Hittade inget föregående kapitel.</string>
 </resources>

@@ -227,7 +227,7 @@ object ContentExtractor {
         val current = StringBuilder()
 
         fun flush() {
-            val text = current.toString().replace(Regex("\\s+"), " ").trim()
+            val text = current.toString().replace(SPACES, " ").trim()
             if (text.isNotEmpty()) lines += text
             current.setLength(0)
         }
@@ -297,6 +297,9 @@ object ContentExtractor {
 
     // ------------------------------------------------------------ glued head
 
+    /** Any run of spaces, including no-break and zero-width ones ("\u00A0", "\u200B"). */
+    private val SPACES = Regex("[\\s\\p{Z}\\u200B-\\u200D\\uFEFF]+")
+
     private const val GLUED_SCAN = 3
     private const val SEP = "\\s*[:：.\\-–—|]?\\s*"
 
@@ -327,7 +330,7 @@ object ContentExtractor {
         val name = NUMBER_PREFIX.replace(title.trim(), "").trim().trimEnd(':', '.', '-', '–', '—').trim()
         val result = paragraphs.toMutableList()
         for (i in 0 until minOf(GLUED_SCAN, result.size)) {
-            var line = result[i]
+            var line = result[i].replace(SPACES, " ").trim()
             var changed = true
             while (changed) {
                 val before = line
@@ -362,11 +365,14 @@ object ContentExtractor {
         val label = CREDIT_LABEL.find(line) ?: return line
         val words = line.substring(label.range.last + 1).split(' ').filter { it.isNotEmpty() }
         var taken = 0
-        for (word in words) {
+        for ((i, word) in words.withIndex()) {
             if (taken >= 4) break
             val bare = word.trim(',', '.', ':', ';', '!', '?', '"', '“', '”')
             val nameLike = bare.isNotEmpty() && (bare.first().isUpperCase() || bare.first().isDigit() || bare.contains('_'))
             if (!nameLike || (taken > 0 && bare.lowercase() in SENTENCE_STARTERS)) break
+            // "Atlas Studios Hill was …": a capitalised word followed by a small one starts the sentence.
+            val nextWord = words.getOrNull(i + 1)
+            if (taken > 0 && nextWord != null && nextWord.first().isLowerCase()) break
             taken++
             // A name ends where its word ends a sentence or a clause.
             if (word.endsWith('.') || word.endsWith(',')) break

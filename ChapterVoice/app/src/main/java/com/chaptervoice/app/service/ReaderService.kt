@@ -33,6 +33,8 @@ import androidx.media.AudioManagerCompat
 import com.chaptervoice.app.AppSettings
 import com.chaptervoice.app.MainActivity
 import com.chaptervoice.app.R
+import com.chaptervoice.app.core.NextChapterResolver
+import com.chaptervoice.app.core.ContentExtractor
 import com.chaptervoice.app.core.BookKey
 import com.chaptervoice.app.core.BookNames
 import com.chaptervoice.app.core.CoverFinder
@@ -287,6 +289,8 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         updateNotification()
 
         val previous = chapter
+        val begin = startAt
+        startAt = StartAt.SAVED
         loadJob = scope.launch {
             val result = if (html != null) {
                 withContext(Dispatchers.Default) { runCatching { ChapterParser.parseHtml(html, url, settings.nextMode) } }
@@ -314,7 +318,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
                 finish(getString(R.string.message_no_more_chapters))
                 return@launch
             }
-            start(loaded)
+            start(loaded, begin)
         }
     }
 
@@ -337,7 +341,9 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         prefetch = next to scope.async { fetch(next, referrer = current.url) }
     }
 
-    private fun start(loaded: Chapter) {
+    private fun start(fresh: Chapter, begin: StartAt = StartAt.SAVED) {
+        // Chapters saved before a text fix get it too.
+        val loaded = fresh.copy(paragraphs = ContentExtractor.stripGluedHead(fresh.paragraphs, fresh.heading.ifBlank { fresh.title }))
         val previous = chapter
         chapter = loaded
         applyLanguage(loaded)
@@ -348,7 +354,11 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         pieces = buildPieces(loaded)
         // Continue where reading stopped last time in this chapter, if it was started before.
         val saved = ReadingPositions.get(this).get(requestedUrl ?: loaded.url)
-        index = saved?.index?.takeIf { it in 1..pieces.lastIndex } ?: 0
+        index = when (begin) {
+            StartAt.BEGINNING -> 0
+            StartAt.END -> pieces.lastIndex
+            StartAt.SAVED -> saved?.index?.takeIf { it in 1..pieces.lastIndex } ?: 0
+        }
         resumeMessage = if (index > 0) getString(R.string.resumed_from, index + 1) else null
         updateLibrary(loaded)
         updateMetadata(loaded, null)
@@ -532,14 +542,46 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
     }
 
     /** Back to the first paragraph, and play. */
+    private enum class StartAt { SAVED, BEGINNING, END }
+
+    /** Where to start the next chapter that is loaded. */
+    private var startAt = StartAt.SAVED
+
+    /**
+     * Goes back to the previous chapter: its start, or with [atEnd] its last paragraph.
+     * Uses the page's "previous" link, or else the chapter number in the address.
+     */
+    private fun previousChapter(atEnd: Boolean) {
+        val current = chapter ?: return
+        val number = NextChapterResolver.chapterNumberIn(current.heading.ifBlank { current.title })
+        val target = current.previousUrl
+            ?: number?.takeIf { it > 1 }?.let { NextChapterResolver.urlForChapter(current.url, it - 1, it) }
+        if (target == null) {
+            ReaderState.update { it.copy(message = getString(R.string.message_no_previous)) }
+            return
+        }
+        startAt = if (atEnd) StartAt.END else StartAt.BEGINNING
+        load(target, html = null)
+    }
+
     private fun restartChapter() {
         if (pieces.isEmpty()) return
+        // Already at the start: back to the previous chapter.
+        if (index == 0) {
+            previousChapter(atEnd = false)
+            return
+        }
         index = 0
         if (playing) speakFrom(0) else resume()
     }
 
     private fun skipParagraph(delta: Int) {
         if (pieces.isEmpty()) return
+        // Back from the first paragraph: the end of the previous chapter.
+        if (delta < 0 && index == 0) {
+            previousChapter(atEnd = true)
+            return
+        }
         val target = (index + delta).coerceIn(0, pieces.lastIndex)
         if (playing) {
             speakFrom(target)

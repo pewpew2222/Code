@@ -43,6 +43,7 @@ class OfflineStore private constructor(context: Context) {
             title = o.optString("title"),
             paragraphs = paragraphs,
             nextUrl = o.optString("nextUrl").ifEmpty { null },
+            previousUrl = o.optString("previousUrl").ifEmpty { null },
             pageTitle = o.optString("pageTitle"),
             heading = o.optString("heading"),
             language = o.optString("language").ifEmpty { null },
@@ -57,6 +58,7 @@ class OfflineStore private constructor(context: Context) {
             .put("title", chapter.title)
             .put("paragraphs", JSONArray(chapter.paragraphs))
             .put("nextUrl", chapter.nextUrl ?: "")
+            .put("previousUrl", chapter.previousUrl ?: "")
             .put("pageTitle", chapter.pageTitle)
             .put("heading", chapter.heading)
             .put("language", chapter.language ?: "")
