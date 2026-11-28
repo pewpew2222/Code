@@ -179,7 +179,7 @@ private fun RefreshableWebView(tab: BrowserTab) {
         factory = { context ->
             // SwipeRefreshLayout already holds its spinner as child 0, so the page's
             // container is found by type, never by position.
-            SwipeRefreshLayout(context).apply {
+            PatientRefreshLayout(context).apply {
                 addView(FrameLayout(context), ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             }
         },
@@ -195,7 +195,7 @@ private fun RefreshableWebView(tab: BrowserTab) {
             layout.setColorSchemeColors(accent)
             layout.setProgressBackgroundColorSchemeColor(background)
             // Only pull to refresh at the very top of the page.
-            layout.setOnChildScrollUpCallback { _, _ -> webView.canScrollVertically(-1) || webView.scrollY > 0 }
+            layout.setOnChildScrollUpCallback { _, _ -> webView.canScrollVertically(-1) || webView.scrollY > 0 || tab.touchInScroller }
             // A long, deliberate pull: the default (64 dp) triggered while just scrolling up.
             val density = layout.resources.displayMetrics.density
             layout.setDistanceToTriggerSync((170 * density).toInt())
@@ -220,6 +220,20 @@ private fun RefreshableWebView(tab: BrowserTab) {
         },
         onRelease = { layout -> layout.pageContainer()?.removeAllViews() },
     )
+}
+
+/**
+ * Pull to refresh that waits a moment at the start of a touch before taking it, so the
+ * page has time to say whether the finger is in a box that scrolls by itself.
+ */
+private class PatientRefreshLayout(context: android.content.Context) : SwipeRefreshLayout(context) {
+    private var downAt = 0L
+
+    override fun onInterceptTouchEvent(ev: android.view.MotionEvent): Boolean {
+        if (ev.actionMasked == android.view.MotionEvent.ACTION_DOWN) downAt = ev.eventTime
+        val decided = super.onInterceptTouchEvent(ev)
+        return decided && ev.eventTime - downAt >= 100
+    }
 }
 
 private fun SwipeRefreshLayout.pageContainer(): FrameLayout? =

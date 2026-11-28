@@ -53,6 +53,12 @@ class BrowserTab internal constructor(
     var title by mutableStateOf(initialTitle)
         internal set
     var progress by mutableIntStateOf(100)
+
+    /**
+     * The finger is on something inside the page that scrolls by itself (a list, a
+     * comment box). Pull to refresh stays off then, so that box can be scrolled up.
+     */
+    @Volatile var touchInScroller = false
         internal set
     var canGoBack by mutableStateOf(false)
         internal set
@@ -327,6 +333,11 @@ class TabManager(private val context: Context, private val settings: AppSettings
     @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
     private fun createWebView(tab: BrowserTab): WebView = WebView(context).apply {
         settings.javaScriptEnabled = true
+        // Only tells whether a touch began inside a scrolling box; nothing else is exposed.
+        addJavascriptInterface(object {
+            @android.webkit.JavascriptInterface
+            fun inScroller(value: Boolean) { tab.touchInScroller = value }
+        }, "ChapterVoiceTouch")
         settings.domStorageEnabled = true
         settings.loadWithOverviewMode = true
         settings.useWideViewPort = true
@@ -369,10 +380,12 @@ class TabManager(private val context: Context, private val settings: AppSettings
 
             override fun onPageCommitVisible(view: WebView, url: String) {
                 injectAdScripts(view, url)
+                view.evaluateJavascript(TOUCH_SCRIPT, null)
             }
 
             override fun onPageFinished(view: WebView, url: String) {
                 injectAdScripts(view, url)
+                view.evaluateJavascript(TOUCH_SCRIPT, null)
                 CookieManager.getInstance().flush()
                 tab.url = url
                 tab.title = view.title.orEmpty()
@@ -457,3 +470,20 @@ class TabManager(private val context: Context, private val settings: AppSettings
         }
     }
 }
+
+/**
+ * On each touch, tells the app whether the finger is inside an element that scrolls by
+ * itself (overflow auto/scroll with more content than fits), so pull to refresh can wait.
+ */
+private const val TOUCH_SCRIPT = """(function(){
+  if (window.__cvTouch) return; window.__cvTouch = true;
+  document.addEventListener('touchstart', function(e){
+    var n = e.target, inside = false;
+    while (n && n.nodeType === 1 && n !== document.body && n !== document.documentElement) {
+      var s = getComputedStyle(n);
+      if ((s.overflowY === 'auto' || s.overflowY === 'scroll') && n.scrollHeight > n.clientHeight + 1) { inside = true; break; }
+      n = n.parentElement;
+    }
+    try { ChapterVoiceTouch.inScroller(inside); } catch (x) {}
+  }, {passive: true, capture: true});
+})()"""
